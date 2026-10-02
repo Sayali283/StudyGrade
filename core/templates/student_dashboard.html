@@ -79,7 +79,7 @@
                     <a class="dashboard-hero-action" href="{% url 'pomodoro_timer' %}"><i class="bi bi-stopwatch" aria-hidden="true"></i> Start a focus session <i class="bi bi-arrow-up-right ms-1" aria-hidden="true"></i></a>
                 </div>
                 <aside class="hero-streak" aria-label="Current study streak">
-                    <div class="hero-streak-label"><i class="bi bi-fire" aria-hidden="true"></i> Current streak</div>
+                    <div class="hero-streak-label"><i class="bi bi-fire" aria-hidden="true"></i> Current Streak</div>
                     <p class="hero-streak-count">{{ current_streak }} <span>{% if current_streak == 1 %}day{% else %}days{% endif %}</span></p>
                     <p class="hero-streak-note">{% if current_streak %}Complete a quiz or focus block today to keep it going.{% else %}Complete a quiz or focus block to start your streak.{% endif %}</p>
                 </aside>
