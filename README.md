@@ -1,579 +1,228 @@
-#  Study Guard
+<div align="center">
 
-### Automated Quiz Generation & Student Progress Monitoring Platform
+# 🎓 StudyGrade
 
-Study Guard is a web-based educational platform developed using Django that helps students improve their learning experience by automatically generating quizzes from uploaded study notes. The platform evaluates quiz performance, tracks academic progress, and allows parents to monitor their child's learning history through a dedicated dashboard.
+### Turn your study notes into quizzes — and let parents follow the progress.
 
-The project demonstrates practical implementation of user authentication, PDF-based study material management, automatic quiz generation, result evaluation, progress tracking, and role-based access using Django and PostgreSQL.
+![Python](https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-Web_Framework-092E20?style=for-the-badge&logo=django&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Completed-success?style=for-the-badge)
 
----
+**Upload PDF notes → get an auto-generated quiz → track scores over time → share progress with parents.**
 
-##  Project Overview
+[Features](#-features) · [Screenshots](#-screenshots) · [How it works](#-how-it-works) · [Quick start](#-quick-start) · [Roadmap](#-roadmap)
 
-Study Guard simplifies the learning process by allowing students to upload study notes in PDF format. The system extracts the study content and automatically creates multiple-choice quizzes. After completing the quiz, students receive an instant score, while their performance history is stored for future reference.
-
-Parents can securely access their child's progress and quiz history through a dedicated parent dashboard, making it easier to monitor academic performance.
-
-The application was developed to demonstrate full-stack web development using Django while solving a real educational problem.
-
----
-
-#  Objectives
-
-- Improve student self-learning through automated quizzes.
-- Reduce manual quiz preparation.
-- Monitor student academic performance.
-- Allow parents to track learning progress.
-- Demonstrate role-based authentication using Django.
-- Showcase practical full-stack web application development.
+</div>
 
 ---
 
-# ✨ Features
+## 📖 About
 
--  Secure Student Authentication
--  Parent Login & Progress Monitoring
--  Upload Study Notes (PDF)
--  Automatic Quiz Generation from Uploaded Notes
--  Multiple Choice Quiz System
--  Automatic Quiz Evaluation
--  Student Progress Tracking
--  Quiz History Management
--  Parent Dashboard for Viewing Student Performance
--  PostgreSQL Database Integration
--  Responsive User Interface using Bootstrap
--  Secure User Session Management
+**StudyGrade** is a full-stack web app built with **Django** that helps students revise smarter. A student uploads study notes as a PDF, the app generates a multiple-choice quiz from the content, scores the attempt instantly, and saves every result. Parents get their own dashboard to follow their child's quiz history and improvement.
+
+**Why I built it:** manually making practice questions is slow, and parents rarely get a clear view of how a student is actually doing. StudyGrade handles both.
 
 ---
 
-# 🎓 User Roles
+## ✨ Features
 
-### 👨‍🎓 Student
-
-Students can:
-
-- Register and log in securely
-- Upload study notes
-- Generate quizzes from uploaded notes
-- Attempt quizzes
-- View quiz scores
-- Track previous quiz attempts
-- Download their uploaded notes
+| | Feature | What it does |
+|---|---|---|
+| 🔐 | **Role-based login** | Separate student and parent accounts with protected dashboards |
+| 📄 | **PDF notes upload** | Students upload study material and manage it from one place |
+| 📝 | **Auto quiz generation** | MCQ questions created from the uploaded notes |
+| ✅ | **Instant evaluation** | Answers are checked and the score is shown right after submission |
+| 📈 | **Progress tracking** | Every attempt is stored, so improvement is visible over time |
+| 👨‍👩‍👧 | **Parent dashboard** | Parents can view quiz history and performance |
+| 📱 | **Responsive UI** | Works on desktop and mobile screens |
 
 ---
 
-### 👨‍👩‍👧 Parent
+## 📸 Screenshots
 
-Parents can:
-
-- Log in securely
-- View their child's quiz history
-- Monitor academic performance
-- Track learning progress
-
----
-
-# ⚙️ Key Functionalities
-
-### 📄 Notes Management
-
-Students upload study material in PDF format. The uploaded notes become the source for automatic quiz generation.
-
-### 📝 Quiz Generation
-
-The system processes the uploaded notes and automatically creates multiple-choice questions based on the extracted study content.
-
-### 📊 Performance Evaluation
-
-After quiz submission, the application automatically evaluates answers, calculates the score, and stores the result in the database.
-
-### 📈 Progress Monitoring
-
-All quiz attempts are stored, allowing students and parents to monitor academic progress over time.
+<table>
+  <tr>
+    <td align="center"><b>🔐 Login</b><br><img src="screenshots/login.png" width="400"></td>
+    <td align="center"><b>📝 Register</b><br><img src="screenshots/register.png" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>🏠 Student Dashboard</b><br><img src="screenshots/dashboard.png" width="400"></td>
+    <td align="center"><b>📄 Upload Notes</b><br><img src="screenshots/upload-notes.png" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>🧠 Quiz Generator</b><br><img src="screenshots/quiz-generator.png" width="400"></td>
+    <td align="center"><b>📊 Quiz Result</b><br><img src="screenshots/quiz-result.png" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>👨‍👩‍👧 Parent Dashboard</b><br><img src="screenshots/parent-dashboard.png" width="400"></td>
+    <td align="center"><b>📈 Progress History</b><br><img src="screenshots/progress-history.png" width="400"></td>
+  </tr>
+</table>
 
 ---
-# 🏗️ System Architecture
 
-<p align="center">
-<img src="assets/architecture.png" width="95%">
-</p>
+## 🔄 How it works
 
-The application follows a role-based web architecture where students upload study notes, the system generates quizzes automatically, evaluates quiz performance, stores academic records, and allows parents to monitor student progress.
-
-### Workflow
-
-```
-Student
-   │
-   ▼
-Login / Register
-   │
-   ▼
-Upload Study Notes (PDF)
-   │
-   ▼
-Automatic Quiz Generation
-   │
-   ▼
-Attempt Quiz
-   │
-   ▼
-Automatic Evaluation
-   │
-   ▼
-Progress & Quiz History
-   │
-   ▼
-Parent Dashboard
+```mermaid
+flowchart LR
+    A[Student logs in] --> B[Uploads PDF notes]
+    B --> C[Quiz generated from content]
+    C --> D[Student attempts quiz]
+    D --> E[Automatic evaluation]
+    E --> F[(Score & history saved)]
+    F --> G[Parent dashboard]
 ```
 
----
+<details>
+<summary><b>System architecture diagram</b></summary>
 
-# 🛠️ Technology Stack
+<img src="assets/architecture.png" alt="StudyGrade architecture" width="700">
 
-## Backend
-
-| Technology | Purpose |
-|------------|---------|
-| Python | Programming Language |
-| Django | Web Framework |
-| Django ORM | Database Operations |
-| PostgreSQL | Relational Database |
+</details>
 
 ---
 
-## Frontend
+## 🧰 Tech stack
 
-| Technology | Purpose |
-|------------|---------|
-| HTML5 | Web Pages |
-| CSS3 | Styling |
-| Bootstrap 5 | Responsive UI |
-| JavaScript | Client-side Functionality |
-
----
-
-## Database
-
-| Technology | Purpose |
-|------------|---------|
-| PostgreSQL | Store Users, Notes, Quizzes & Results |
+| Layer | Technologies |
+|---|---|
+| **Backend** | Python, Django, Django ORM |
+| **Database** | PostgreSQL |
+| **Frontend** | HTML5, CSS3, Bootstrap 5, JavaScript |
+| **Deployment** | Procfile + `runtime.txt` included (Heroku-style hosting) |
+| **Tools** | Git, GitHub, GitHub Actions |
 
 ---
 
-## Development Tools
+## 🚀 Quick start
 
-| Tool | Purpose |
-|------|---------|
-| VS Code | Code Editor |
-| Git | Version Control |
-| GitHub | Repository Hosting |
-
----
-
-# 📸 Application Screenshots
-
-## 🔐 Login
-
-<p align="center">
-<img src="screenshots/login.png" width="90%">
-</p>
-
-Secure authentication for students and parents.
-
----
-
-## 📝 Student Registration
-
-<p align="center">
-<img src="screenshots/register.png" width="90%">
-</p>
-
-New students can create an account before accessing the platform.
-
----
-
-## 🏠 Student Dashboard
-
-<p align="center">
-<img src="screenshots/dashboard.png" width="90%">
-</p>
-
-Students can manage study notes, quizzes, and monitor their learning progress from a centralized dashboard.
-
----
-
-## 📄 Upload Study Notes
-
-<p align="center">
-<img src="screenshots/upload-notes.png" width="90%">
-</p>
-
-Students upload PDF study material that is used for automatic quiz generation.
-
----
-
-## 📝 Quiz Generation
-
-<p align="center">
-<img src="screenshots/quiz-generator.png" width="90%">
-</p>
-
-The system automatically generates multiple-choice questions based on the uploaded study notes.
-
----
-
-## 📊 Quiz Result
-
-<p align="center">
-<img src="screenshots/quiz-result.png" width="90%">
-</p>
-
-After quiz submission, the application evaluates answers and displays the student's score instantly.
-
----
-
-## 👨‍👩‍👧 Parent Dashboard
-
-<p align="center">
-<img src="screenshots/parent-dashboard.png" width="90%">
-</p>
-
-Parents can securely view their child's quiz history and monitor academic performance.
-
----
-
-## 📈 Progress History
-
-<p align="center">
-<img src="screenshots/progress-history.png" width="90%">
-</p>
-
-Students and parents can review previous quiz attempts and track learning progress over time.
-
----
-# 📂 Project Structure
-
-```
-Study-Guard
-│
-├── assets/
-├── architecture/
-├── screenshots/
-├── accounts/
-├── parents/
-├── quizzes/
-├── students/
-├── templates/
-├── static/
-├── media/
-├── smartstudy/
-├── manage.py
-├── requirements.txt
-└── README.md
-```
-
----
-
-# ⚙️ Installation Guide
-
-## 1. Clone the Repository
+**1. Clone the repo**
 
 ```bash
-git clone https://github.com/Sachingupta209/Study-Guard.git
-
-cd Study-Guard
+git clone https://github.com/Sayali283/StudyGrade.git
+cd StudyGrade
 ```
 
----
-
-## 2. Create a Virtual Environment
-
-### Windows
+**2. Create a virtual environment**
 
 ```bash
+# Windows
 python -m venv venv
-
 venv\Scripts\activate
-```
 
-### Linux / macOS
-
-```bash
+# Linux / macOS
 python3 -m venv venv
-
 source venv/bin/activate
 ```
 
----
-
-## 3. Install Dependencies
+**3. Install dependencies**
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
-
-## 4. Configure PostgreSQL Database
-
-Update the database configuration inside:
-
-```
-settings.py
-```
-
-Example:
-
-```python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'studyguard',
-        'USER': 'postgres',
-        'PASSWORD': 'your_password',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
-```
-
----
-
-## 5. Apply Database Migrations
+**4. Set up environment variables**
 
 ```bash
-python manage.py makemigrations
+cp .env.example .env
+```
 
+Open `.env` and fill in your own values (secret key, database details, etc.). Never commit the real `.env` file.
+
+**5. Run migrations**
+
+```bash
 python manage.py migrate
 ```
 
----
-
-## 6. Create an Admin User (Optional)
+**6. (Optional) Create an admin user**
 
 ```bash
 python manage.py createsuperuser
 ```
 
----
-
-## 7. Run the Development Server
+**7. Start the server**
 
 ```bash
 python manage.py runserver
 ```
 
-Open your browser:
+Then open **http://127.0.0.1:8000** in your browser. 🎉
+
+---
+
+## 📁 Project structure
 
 ```
-http://127.0.0.1:8000
+StudyGrade/
+├── .github/workflows/   # CI workflow
+├── assets/              # Architecture diagram & images
+├── core/                # Core app logic
+├── smartstudy/          # Django project settings & config
+├── project_files/       # Supporting project files
+├── screenshots/         # README screenshots
+├── manage.py
+├── requirements.txt
+├── Procfile             # Deployment process definition
+├── runtime.txt          # Python version for deployment
+└── .env.example         # Sample environment variables
 ```
 
 ---
 
-# 🔄 Application Workflow
+## 🔐 Security
 
-The Study Guard platform follows a simple learning workflow.
-
-### Step 1
-
-Student registers and logs into the system.
-
-↓
-
-### Step 2
-
-Student uploads study notes in PDF format.
-
-↓
-
-### Step 3
-
-The application extracts the study content.
-
-↓
-
-### Step 4
-
-Multiple-choice quiz questions are generated automatically.
-
-↓
-
-### Step 5
-
-Student attempts the quiz.
-
-↓
-
-### Step 6
-
-The system evaluates answers and calculates the score.
-
-↓
-
-### Step 7
-
-Quiz history and performance are stored.
-
-↓
-
-### Step 8
-
-Parents can log in to monitor the student's academic progress.
+- Password hashing through Django's authentication system
+- Role-based access control for student and parent areas
+- Session management and CSRF protection
+- Secrets kept in environment variables, not in the code
 
 ---
 
-# 🔐 Security Features
+## 🗺️ Roadmap
 
-- User Authentication
-- Role-Based Access Control
-- Password Hashing using Django Authentication
-- Session Management
-- Protected Student & Parent Dashboards
-- Secure Database Access
-- Form Validation
-- CSRF Protection
-
----
-
-# 📌 Key Modules
-
-### 👤 Authentication Module
-
-Handles secure login and registration for students and parents.
+- [ ] Email notifications for quiz results
+- [ ] Charts for performance visualization
+- [ ] Support for DOCX / PPT / TXT notes
+- [ ] Teacher dashboard
+- [ ] Custom quiz creation
+- [ ] Export quiz reports as PDF
+- [ ] AI-assisted question generation using LLMs
+- [ ] Two-factor authentication
 
 ---
 
-### 📄 Notes Management Module
+## 💡 What I learned
 
-Allows students to upload and manage study notes.
-
----
-
-### 📝 Quiz Module
-
-Automatically generates multiple-choice quizzes from uploaded study notes.
+Django project structure, authentication and authorization, PostgreSQL and the ORM, file upload handling, database design, responsive UI, and using Git/GitHub for a complete project.
 
 ---
 
-### 📊 Result Module
+## 🤝 Contributing
 
-Evaluates quiz submissions and stores student scores.
+Contributions and ideas are welcome!
 
----
-
-### 👨‍👩‍👧 Parent Module
-
-Provides parents with access to their child's quiz history and learning progress.
-
----
-# 🚀 Future Enhancements
-
-The following features can be added in future versions of Study Guard:
-
--  Email notifications for quiz results
--  Mobile responsive improvements
--  Interactive analytics dashboard
--  Support for multiple study material formats (DOCX, PPT, TXT)
--  Advanced search and filtering for notes
--  Teacher Dashboard
--  Custom Quiz Creation
--  Cloud Deployment (AWS / Azure)
--  Export Quiz Reports as PDF
--  Two-Factor Authentication (2FA)
-   Performance Visualization using Charts
--  AI-assisted Quiz Generation using Large Language Models (Future Enhancement)
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes
+4. Open a Pull Request
 
 ---
 
-# 🌍 Project Status
+## 👩‍💻 Author
 
-> ✅ Completed
+**Sayali Ingole**
+BCA graduate · Python · AI/ML · Full-stack development
 
-Study Guard is fully functional and demonstrates:
-
-- Role-based authentication
-- Study notes management
-- Automatic quiz generation
-- Quiz evaluation
-- Student progress tracking
-- Parent monitoring
-- PostgreSQL integration
-- Responsive web interface
+[![GitHub](https://img.shields.io/badge/GitHub-Sayali283-181717?style=flat-square&logo=github)](https://github.com/Sayali283)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Sayali_Ingole-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/sayali-ingole-bb0ab3295)
 
 ---
 
-# 💡 Learning Outcomes
+<div align="center">
 
-This project helped strengthen practical knowledge in:
-
-- Python Programming
-- Django Framework
-- PostgreSQL Database
-- Authentication & Authorization
-- CRUD Operations
-- File Upload Handling
-- Database Design
-- Responsive Web Development
-- Git & GitHub
-- Software Project Structure
-
----
-
-# 📄 Repository Information
-
-| Item | Details |
-|------|---------|
-| Project | Study Guard |
-| Project Type | Full Stack Web Application |
-| Framework | Django |
-| Database | PostgreSQL |
-| Version Control | Git & GitHub |
-
----
-
-# 👨‍💻 Author
-
-**Sachin Gupta**
-
-Backend Developer | Java | Python | Cloud & DevOps Enthusiast
-
-### Technologies
-
-- Java
-- Spring Boot
-- Python
-- Django
-- PostgreSQL
-- React
-- Docker
-- AWS
-- Git
-- GitHub
-
-----
-
-# 🤝 Contributing
-
-Contributions are welcome.
-
-If you'd like to improve Study Guard:
-
-1. Fork the repository.
-2. Create a feature branch.
-3. Commit your changes.
-4. Submit a Pull Request.
-
----
-
-
-## 📚 Study Guard
-
-### Automated Quiz Generation & Student Progress Monitoring Platform
-
-**Built with Python, Django & PostgreSQL**
+⭐ If you found this project useful, consider giving it a star!
 
 </div>
-#   S t u d y G r a d e  
- 
