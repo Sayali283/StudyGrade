@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="flashcard-study">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+        <div>
+            <a class="small text-success fw-bold text-decoration-none" href="{% url 'flashcard_home' %}"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i> All flashcards</a>
+            <p class="text-uppercase fw-bold text-success small mt-3 mb-1">{{ note.subject }}</p>
+            <h1 class="dashboard-title mb-0">Recall practice</h1>
+        </div>
+        <span class="flashcard-count-badge"><i class="bi bi-stack me-1" aria-hidden="true"></i> {{ cards|length }} cards</span>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}" role="status">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    {% if cards %}
+        <section class="study-panel" aria-label="Flashcard study session">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="small fw-bold text-secondary" id="card-position" aria-live="polite"></span>
+                <button class="btn btn-sm btn-outline-dark" id="shuffle-cards" type="button" title="Shuffle cards"><i class="bi bi-shuffle me-1" aria-hidden="true"></i> Shuffle</button>
+            </div>
+            <div class="progress flashcard-progress" role="progressbar" aria-label="Study session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div class="progress-bar" id="card-progress"></div>
+            </div>
+
+            <button class="flashcard-stage mt-4" id="flashcard-stage" type="button" aria-pressed="false" aria-label="Show answer">
+                <span class="flashcard-inner">
+                    <span class="flashcard-face flashcard-front">
+                        <span class="flashcard-side-label"><i class="bi bi-lightbulb me-1" aria-hidden="true"></i> Question</span>
+                        <span class="flashcard-copy" id="flashcard-front"></span>
+                        <span class="flashcard-hint">Select the card to reveal the answer</span>
+                    </span>
+                    <span class="flashcard-face flashcard-back">
+                        <span class="flashcard-side-label"><i class="bi bi-check2-circle me-1" aria-hidden="true"></i> Key point</span>
+                        <span class="flashcard-copy" id="flashcard-back"></span>
+                        <span class="flashcard-hint">Select the card to return to the question</span>
+                    </span>
+                </span>
+            </button>
+
+            <div class="d-flex justify-content-center align-items-center gap-3 mt-4">
+                <button class="btn btn-outline-dark" id="previous-card" type="button" aria-label="Previous card"><i class="bi bi-arrow-left" aria-hidden="true"></i><span class="d-none d-sm-inline ms-2">Previous</span></button>
+                <button class="btn btn-primary" id="flip-card" type="button"><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i> Flip card</button>
+                <button class="btn btn-outline-dark" id="next-card" type="button" aria-label="Next card"><span class="d-none d-sm-inline me-2">Next</span><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+            </div>
+            <p class="text-center text-secondary small mt-3 mb-0">Use the left and right arrow keys to move between cards.</p>
+            <div class="text-center mt-4">
+                <form method="post" action="{% url 'complete_flashcard_session' note.id %}">
+                    {% csrf_token %}
+                    <button class="btn btn-primary" id="complete-session" type="submit" disabled><i class="bi bi-fire me-1" aria-hidden="true"></i> Complete today’s study</button>
+                </form>
+                <p class="small text-secondary mt-2 mb-0" id="complete-hint">Reveal at least one answer to log today’s study.</p>
+            </div>
+        </section>
+        {{ flashcards_data|json_script:"flashcard-data" }}
+    {% else %}
+        <div class="card-box text-center py-5">
+            <span class="flashcard-empty-icon"><i class="bi bi-stars" aria-hidden="true"></i></span>
+            <h2 class="h4 mt-3">No cards for this note yet</h2>
+            <p class="text-secondary mb-4">Generate a set of important points from this note to begin studying.</p>
+            <form method="post" action="{% url 'generate_flashcards' note.id %}">
+                {% csrf_token %}
+                <button class="btn btn-primary" type="submit"><i class="bi bi-stars me-1" aria-hidden="true"></i> Generate flashcards</button>
+            </form>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+    .flashcard-study { max-width: 820px; margin-inline: auto; }
+    .flashcard-count-badge { padding: 8px 12px; border: 1px solid var(--line); border-radius: 5px; background: #fff; color: var(--muted); font-size: 13px; font-weight: 700; }
+    .study-panel { padding: clamp(18px, 4vw, 34px); border: 1px solid var(--line); border-radius: 8px; background: #fff; box-shadow: 0 8px 24px rgba(31, 56, 47, .045); }
+    .flashcard-progress { height: 5px; border-radius: 5px; background: var(--soft-green); }
+    .flashcard-progress .progress-bar { background: var(--green); transition: width .25s ease; }
+    .flashcard-stage { display: block; width: 100%; min-height: 320px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--ink); perspective: 1200px; text-align: left; }
+    .flashcard-stage:focus-visible { outline: 3px solid rgba(40, 116, 91, .35); outline-offset: 4px; }
+    .flashcard-inner { position: relative; display: block; min-height: 320px; transform-style: preserve-3d; transition: transform .45s ease; }
+    .flashcard-stage.is-flipped .flashcard-inner { transform: rotateY(180deg); }
+    .flashcard-face { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; min-height: 320px; padding: clamp(22px, 5vw, 52px); border: 1px solid #dce7df; border-radius: 8px; backface-visibility: hidden; }
+    .flashcard-front { background: #f6f9f6; }
+    .flashcard-back { transform: rotateY(180deg); border-color: #eadbd3; background: #fbf6f2; }
+    .flashcard-side-label { margin-bottom: 18px; color: var(--green); font-size: 12px; font-weight: 700; text-transform: uppercase; }
+    .flashcard-back .flashcard-side-label { color: var(--coral); }
+    .flashcard-copy { max-height: 190px; overflow-y: auto; font-family: 'DM Serif Display', Georgia, serif; font-size: 27px; line-height: 1.35; }
+    .flashcard-hint { margin-top: 22px; color: var(--muted); font-size: 12px; }
+    @media (max-width: 575.98px) {
+        .flashcard-stage, .flashcard-inner, .flashcard-face { min-height: 290px; }
+        .flashcard-copy { font-size: 22px; }
+        .study-panel { padding: 16px; }
+    }
+    @media (prefers-reduced-motion: reduce) { .flashcard-inner, .flashcard-progress .progress-bar { transition: none; } }
+</style>
+
+{% if cards %}
+<script>
+    (() => {
+        const cards = JSON.parse(document.getElementById('flashcard-data').textContent);
+        const stage = document.getElementById('flashcard-stage');
+        const front = document.getElementById('flashcard-front');
+        const back = document.getElementById('flashcard-back');
+        const position = document.getElementById('card-position');
+        const progress = document.getElementById('card-progress');
+        const progressTrack = progress.parentElement;
+        const completeSession = document.getElementById('complete-session');
+        let currentIndex = 0;
+        let deck = cards.map((card, index) => ({ ...card, originalIndex: index }));
+
+        function renderCard() {
+            const card = deck[currentIndex];
+            front.textContent = card.front;
+            back.textContent = card.back;
+            position.textContent = `Card ${currentIndex + 1} of ${deck.length}`;
+            const completion = Math.round(((currentIndex + 1) / deck.length) * 100);
+            progress.style.width = `${completion}%`;
+            progressTrack.setAttribute('aria-valuenow', completion);
+            stage.classList.remove('is-flipped');
+            stage.setAttribute('aria-pressed', 'false');
+            stage.setAttribute('aria-label', `Card ${currentIndex + 1} of ${deck.length}. Show answer.`);
+            document.getElementById('previous-card').disabled = currentIndex === 0;
+            document.getElementById('next-card').disabled = currentIndex === deck.length - 1;
+        }
+
+        function flipCard() {
+            const flipped = stage.classList.toggle('is-flipped');
+            stage.setAttribute('aria-pressed', String(flipped));
+            stage.setAttribute('aria-label', flipped ? 'Showing answer. Return to question.' : 'Show answer.');
+            if (flipped) completeSession.disabled = false;
+        }
+
+        stage.addEventListener('click', flipCard);
+        document.getElementById('flip-card').addEventListener('click', flipCard);
+        document.getElementById('previous-card').addEventListener('click', () => {
+            if (currentIndex > 0) { currentIndex -= 1; renderCard(); }
+        });
+        document.getElementById('next-card').addEventListener('click', () => {
+            if (currentIndex < deck.length - 1) { currentIndex += 1; renderCard(); }
+        });
+        document.getElementById('shuffle-cards').addEventListener('click', () => {
+            for (let index = deck.length - 1; index > 0; index -= 1) {
+                const swapIndex = Math.floor(Math.random() * (index + 1));
+                [deck[index], deck[swapIndex]] = [deck[swapIndex], deck[index]];
+            }
+            currentIndex = 0;
+            renderCard();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.altKey || event.ctrlKey || event.metaKey) return;
+            if (event.key === 'ArrowLeft' && currentIndex > 0) {
+                event.preventDefault();
+                currentIndex -= 1;
+                renderCard();
+            } else if (event.key === 'ArrowRight' && currentIndex < deck.length - 1) {
+                event.preventDefault();
+                currentIndex += 1;
+                renderCard();
+            }
+        });
+
+        renderCard();
+    })();
+</script>
+{% endif %}
+{% endblock %}

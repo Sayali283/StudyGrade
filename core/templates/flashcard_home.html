@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="flashcard-library">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+        <div>
+            <p class="text-uppercase fw-bold text-success small mb-2">Active recall</p>
+            <h1 class="dashboard-title mb-2">Flashcards</h1>
+            <p class="text-secondary mb-0">Turn the key ideas in your notes into a quick review session.</p>
+        </div>
+        <a class="btn btn-outline-dark" href="{% url 'quiz_home' %}"><i class="bi bi-ui-checks me-1" aria-hidden="true"></i> Quiz center</a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}" role="status">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    {% if notes %}
+        <div class="row g-3">
+            {% for note in notes %}
+                <div class="col-lg-6">
+                    <article class="card-box flashcard-note">
+                        <div class="d-flex align-items-start gap-3">
+                            <span class="flashcard-note-icon"><i class="bi bi-journal-bookmark" aria-hidden="true"></i></span>
+                            <div class="flex-grow-1 min-w-0">
+                                <h2 class="h5 mb-1">{{ note.subject }}</h2>
+                                <p class="small text-secondary mb-0">
+                                    {% if note.flashcard_count %}
+                                        {{ note.flashcard_count }} cards ready to review
+                                    {% else %}
+                                        No flashcards yet
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 mt-4">
+                            {% if note.flashcard_count %}
+                                <a class="btn btn-primary" href="{% url 'study_flashcards' note.id %}"><i class="bi bi-play-fill me-1" aria-hidden="true"></i> Study cards</a>
+                            {% endif %}
+                            <form method="post" action="{% url 'generate_flashcards' note.id %}">
+                                {% csrf_token %}
+                                <button class="btn {% if note.flashcard_count %}btn-outline-primary{% else %}btn-primary{% endif %}" type="submit">
+                                    <i class="bi bi-stars me-1" aria-hidden="true"></i>
+                                    {% if note.flashcard_count %}Regenerate{% else %}Make flashcards{% endif %}
+                                </button>
+                            </form>
+                        </div>
+                    </article>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card-box text-center py-5">
+            <span class="flashcard-empty-icon"><i class="bi bi-journal-plus" aria-hidden="true"></i></span>
+            <h2 class="h4 mt-3">Add notes to start a deck</h2>
+            <p class="text-secondary mb-4">Upload a text-based PDF or TXT file, then turn its main ideas into recall cards.</p>
+            <a class="btn btn-primary" href="{% url 'student_notes' %}">Go to my notes</a>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+    .flashcard-note { display: flex; flex-direction: column; justify-content: space-between; }
+    .flashcard-note-icon, .flashcard-empty-icon {
+        display: grid;
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        place-items: center;
+        border-radius: 8px;
+        background: var(--soft-green);
+        color: var(--green);
+        font-size: 20px;
+    }
+    .flashcard-empty-icon { width: 54px; height: 54px; margin-inline: auto; font-size: 24px; }
+</style>
+{% endblock %}

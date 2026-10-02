@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="row justify-content-center">
+
+        <div class="col-md-6">
+
+            <div class="card-box">
+
+                <h2 class="text-center text-primary mb-4">
+
+                    Parent Signup
+
+                </h2>
+
+                {% if messages %}
+                    {% for message in messages %}
+
+                        <div class="alert alert-warning">
+
+                            {{ message }}
+
+                        </div>
+
+                    {% endfor %}
+                {% endif %}
+
+                <form method="POST">
+
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Full Name
+
+                        </label>
+
+                        <input
+                        type="text"
+                        name="name"
+                        class="form-control"
+                        placeholder="Enter full name"
+                        required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Email Address
+
+                        </label>
+
+                        <input
+                        type="email"
+                        name="email"
+                        class="form-control"
+                        placeholder="Enter email"
+                        required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Password
+
+                        </label>
+
+                        <input
+                        type="password"
+                        name="password"
+                        class="form-control"
+                        placeholder="Enter password"
+                        required>
+
+                    </div>
+
+                    <div class="mb-4">
+
+                        <label class="form-label" for="student-email">
+                            Student email address
+                        </label>
+
+                        <input
+                        type="text"
+                        id="student-email"
+                        name="student_email"
+                        class="form-control"
+                        placeholder="Enter the student's registered email"
+                        autocomplete="email"
+                        required>
+
+                    </div>
+
+                    <button
+                    type="submit"
+                    class="btn btn-primary w-100">
+
+                        Create Parent Account
+
+                    </button>
+
+                </form>
+
+                <div class="text-center mt-4">
+
+                    <a href="/login/"
+                    class="btn btn-success">
+
+                        Back To Login
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

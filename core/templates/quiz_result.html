@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="card-box text-center mb-5">
+
+        <h1 class="text-primary mb-4">
+            Quiz Result
+        </h1>
+
+        <div class="display-3 fw-bold text-success">
+
+            {{ quiz.score }}%
+
+        </div>
+
+        <p class="text-muted mt-3">
+
+            Performance Summary
+
+        </p>
+
+    </div>
+
+    <!-- Stats -->
+
+    <div class="row g-4 mb-5">
+
+        <div class="col-md-4">
+
+            <div class="card-box text-center">
+
+                <h5 class="text-secondary">
+                    Correct Answers
+                </h5>
+
+                <div class="stat-number text-success">
+
+                    {{ correct_count }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card-box text-center">
+
+                <h5 class="text-secondary">
+                    Wrong Answers
+                </h5>
+
+                <div class="stat-number text-danger">
+
+                    {{ wrong_count }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card-box text-center">
+
+                <h5 class="text-secondary">
+                    Total Questions
+                </h5>
+
+                <div class="stat-number text-primary">
+
+                    {{ total }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Answers Review -->
+
+    <div class="card-box">
+
+        <h3 class="text-primary mb-4">
+
+            Answer Review
+
+        </h3>
+
+        {% for q in questions %}
+
+        <div class="border rounded p-3 mb-4">
+
+            <h5>
+
+                Q{{ forloop.counter }}.
+                {{ q.question_text }}
+
+            </h5>
+
+            <p class="mt-3">
+
+                <strong>
+                    Correct Answer:
+                </strong>
+
+                <span class="text-success">
+
+                    {{ q.correct_answer }}
+
+                </span>
+
+            </p>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    <!-- Buttons -->
+
+    <div class="text-center mt-5">
+
+        <a href="/student/quiz/"
+        class="btn btn-primary btn-lg me-3">
+
+            Back To Quiz Center
+
+        </a>
+
+        <a href="/student/dashboard/"
+        class="btn btn-success btn-lg">
+
+            Dashboard
+
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

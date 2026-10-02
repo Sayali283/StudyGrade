@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        <!-- Sidebar -->
+
+        <div class="col-md-2 mb-4">
+
+            <div class="card-box">
+
+                <h4 class="text-primary mb-4">
+
+                    Parent Panel
+
+                </h4>
+
+                <div class="d-grid gap-3">
+
+                    <a href="/parent/dashboard/"
+                    class="btn btn-primary">
+
+                        Dashboard
+
+                    </a>
+
+                    <a href="/logout/"
+                    class="btn btn-outline-danger">
+
+                        Logout
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Main Content -->
+
+        <div class="col-md-10">
+
+            <h2 class="dashboard-title">
+
+                Welcome Parent
+
+            </h2>
+
+            <!-- Student Info -->
+
+            <div class="row g-4 mb-5">
+
+                <div class="col-6 col-xl-3">
+
+                    <div class="card-box text-center">
+
+                        <h5 class="text-secondary">
+
+                            Student Name
+
+                        </h5>
+
+                        <div class="stat-number text-primary">
+
+                            {{ student.user.first_name }}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-6 col-xl-3">
+
+                    <div class="card-box text-center">
+
+                        <h5 class="text-secondary">
+
+                            Class / Semester
+
+                        </h5>
+
+                        <div class="stat-number text-success">
+
+                            {{ student.class_semester }}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-6 col-xl-3">
+
+                    <div class="card-box text-center">
+
+                        <h5 class="text-secondary">
+
+                            Total Quizzes
+
+                        </h5>
+
+                        <div class="stat-number text-info">
+
+                            {{ quizzes.count }}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-6 col-xl-3">
+
+                    <div class="card-box text-center">
+
+                        <h5 class="text-secondary">
+                            Current Study Streak
+                        </h5>
+
+                        <div class="stat-number">
+                            <i class="bi bi-fire" aria-hidden="true"></i> {{ current_streak }}
+                        </div>
+
+                        <p class="small text-secondary mb-0">
+                            {% if current_streak == 1 %}day{% else %}days{% endif %} in a row
+                            {% if last_study_day %}<br>Last studied {{ last_study_day.study_date|date:"M j" }}{% else %}<br>No study days yet{% endif %}
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Quiz History -->
+
+            <div class="card-box">
+
+                <h3 class="text-primary mb-4">
+
+                    Student Quiz Performance
+
+                </h3>
+
+                {% if quizzes %}
+
+                    <div class="table-responsive">
+
+                        <table class="table table-hover">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Subject</th>
+                                    <th>Score</th>
+                                    <th>Date</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                {% for quiz in quizzes %}
+
+                                <tr>
+
+                                    <td>
+
+                                        {{ quiz.subject }}
+
+                                    </td>
+
+                                    <td>
+
+                                        <span class="badge bg-success fs-6">
+
+                                            {{ quiz.score }}%
+
+                                        </span>
+
+                                    </td>
+
+                                    <td>
+
+                                        {{ quiz.date }}
+
+                                    </td>
+
+                                </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="alert alert-warning">
+
+                        No quiz records available.
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container">
+
+    <h2 class="dashboard-title">
+
+        Student Progress Analytics
+
+    </h2>
+
+    <!-- Stats -->
+
+    <div class="row g-4 mb-5">
+
+        <div class="col-md-3">
+
+            <div class="card-box text-center">
+
+                <h5 class="text-secondary">
+                    Total Quizzes
+                </h5>
+
+                <div class="stat-number text-primary">
+
+                    {{ total_quizzes }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card-box text-center">
+
+                <h5 class="text-secondary">
+                    Average Score
+                </h5>
+
+                <div class="stat-number text-success">
+
+                    {{ average_score }}%
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card-box text-center">
+
+                <h5 class="text-secondary">
+                    Best Score
+                </h5>
+
+                <div class="stat-number text-info">
+
+                    {{ best_score }}%
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card-box text-center">
+
+                <h5 class="text-secondary">
+                    Lowest Score
+                </h5>
+
+                <div class="stat-number text-danger">
+
+                    {{ worst_score }}%
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <section class="study-next-panel mb-5" aria-labelledby="study-next-title">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <p class="text-uppercase fw-bold small mb-2">Study next</p>
+                {% if recommended_topic %}
+                    <h3 id="study-next-title" class="h4 mb-2">Give {{ recommended_topic.topic }} another review</h3>
+                    <p class="mb-0">{{ recommended_topic.accuracy }}% accuracy across {{ recommended_topic.attempts }} answered question{{ recommended_topic.attempts|pluralize }}. Review this topic, then try another quiz.</p>
+                {% else %}
+                    <h3 id="study-next-title" class="h4 mb-2">Take a quiz to find your focus area</h3>
+                    <p class="mb-0">After your next quiz, topic-level results will suggest what to review.</p>
+                {% endif %}
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'quiz_home' %}" class="btn btn-primary">Quiz center <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+                <a href="{% url 'flashcard_home' %}" class="btn btn-outline-dark">Flashcards</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chart -->
+
+    <div class="card-box mb-5">
+
+        <h3 class="text-primary mb-4">
+
+            Quiz Performance Chart
+
+        </h3>
+
+        <canvas id="scoreChart"></canvas>
+
+    </div>
+
+    <section class="card-box mb-5 topic-performance" aria-labelledby="topic-performance-title">
+        <h3 id="topic-performance-title" class="text-primary mb-4">Topic accuracy</h3>
+        {% if topic_performance %}
+            <div class="topic-chart-wrap">
+                <canvas id="topicChart" aria-label="Quiz accuracy by topic"></canvas>
+            </div>
+            <div class="table-responsive mt-4">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr><th>Topic</th><th>Correct</th><th>Answered</th><th>Accuracy</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for item in topic_performance %}
+                            <tr>
+                                <td>{{ item.topic }}</td>
+                                <td>{{ item.correct }}</td>
+                                <td>{{ item.attempts }}</td>
+                                <td><span class="badge {% if item.accuracy < 60 %}bg-danger{% elif item.accuracy < 80 %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ item.accuracy }}%</span></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info mb-0">Topic insights will appear after you answer a quiz with topic-tagged questions.</div>
+        {% endif %}
+    </section>
+
+    <!-- Table -->
+
+    <div class="card-box">
+
+        <h3 class="text-primary mb-4">
+
+            Quiz Performance Table
+
+        </h3>
+
+        {% if quizzes %}
+
+        <div class="table-responsive">
+
+            <table class="table table-hover">
+
+                <thead>
+
+                    <tr>
+
+                        <th>#</th>
+                        <th>Subject</th>
+                        <th>Score</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for quiz in quizzes %}
+
+                    <tr>
+
+                        <td>
+
+                            {{ forloop.counter }}
+
+                        </td>
+
+                        <td>
+
+                            {{ quiz.subject }}
+
+                        </td>
+
+                        <td>
+
+                            <span class="badge bg-success fs-6">
+
+                                {{ quiz.score }}%
+
+                            </span>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="alert alert-warning">
+
+            No quiz data available.
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+<!-- Chart.js -->
+
+{{ topic_chart_data|json_script:"topic-chart-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+const labels = [
+
+    {% for quiz in quizzes %}
+
+        "Quiz {{ forloop.counter }}",
+
+    {% endfor %}
+
+];
+
+const scores = [
+
+    {% for quiz in quizzes %}
+
+        {{ quiz.score|default:0 }},
+
+    {% endfor %}
+
+];
+
+const ctx = document.getElementById('scoreChart').getContext('2d');
+
+new Chart(ctx, {
+
+    type: 'line',
+
+    data: {
+
+        labels: labels,
+
+        datasets: [{
+
+            label: 'Quiz Scores',
+
+            data: scores,
+
+            borderWidth: 3,
+
+            tension: 0.3,
+
+            fill: false
+
+        }]
+
+    },
+
+    options: {
+
+        responsive: true,
+
+        scales: {
+
+            y: {
+
+                beginAtZero: true,
+
+                max: 100
+
+            }
+
+        }
+
+    }
+
+});
+
+const topicStats = JSON.parse(document.getElementById('topic-chart-data').textContent);
+const topicCanvas = document.getElementById('topicChart');
+
+if (topicCanvas && topicStats.length) {
+    new Chart(topicCanvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: topicStats.map(item => item.topic),
+            datasets: [{
+                label: 'Accuracy',
+                data: topicStats.map(item => item.accuracy),
+                backgroundColor: topicStats.map(item => item.accuracy < 60 ? '#ca674e' : '#28745b'),
+                borderRadius: 4,
+                maxBarThickness: 42
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, max: 100, ticks: { callback: value => `${value}%` } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+</script>
+
+<style>
+    .study-next-panel { padding: 25px 28px; border: 1px solid #eadbd3; border-left: 4px solid var(--coral); border-radius: 8px; background: #fbf6f2; color: var(--ink); }
+    .study-next-panel > div > div:first-child > p:first-child { color: var(--coral); }
+    .study-next-panel h3 { font-family: 'DM Sans', sans-serif; }
+    .topic-chart-wrap { position: relative; height: 280px; }
+    @media (max-width: 575.98px) { .study-next-panel { padding: 20px; } .topic-chart-wrap { height: 230px; } }
+</style>
+
+{% endblock %}

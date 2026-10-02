@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+    .home-hero {
+      display: grid;
+      grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
+      align-items: center;
+      gap: clamp(36px, 6vw, 88px);
+      padding: 30px 0 56px;
+    }
+
+    .home-copy { animation: arrive .55s ease-out both; }
+    .home-eyebrow, .preview-label {
+      margin: 0 0 16px;
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .home-title { max-width: 570px; margin: 0; font-size: 76px; line-height: 1.02; }
+    .home-title em { color: var(--coral); font-style: normal; }
+    .home-description { max-width: 470px; margin: 24px 0 27px; color: var(--muted); font-size: 17px; line-height: 1.75; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .hero-actions .btn { min-height: 48px; padding: 12px 19px; }
+    .hero-secondary { border: 1px solid #c9d5cd; background: transparent; color: var(--ink); }
+    .hero-secondary:hover { border-color: var(--green); background: var(--soft-green); color: var(--green-dark); }
+    .home-note { display: flex; align-items: center; gap: 9px; margin-top: 30px; color: var(--muted); font-size: 13px; }
+    .home-note i { color: var(--green); font-size: 16px; }
+    .home-preview {
+      padding: 14px;
+      border: 1px solid #dce5de;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 20px 55px rgba(31, 56, 47, .10);
+      animation: arrive .65s .12s ease-out both;
+    }
+
+    .preview-top, .preview-bottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 5px 12px; color: var(--muted); font-size: 11px; font-weight: 700; }
+    .preview-label { margin: 0; }
+    .preview-window { overflow: hidden; border: 1px solid var(--line); border-radius: 5px; background: var(--canvas); }
+    .preview-window img { display: block; width: 100%; height: auto; }
+    .preview-bottom { padding: 12px 5px 2px; font-weight: 500; }
+    .preview-bottom i { color: var(--coral); }
+    .parent-link { margin: 23px 0 0; color: var(--muted); font-size: 13px; }
+    .parent-link a { color: var(--green-dark); font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    .feature-band { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; padding: 27px 0 4px; border-top: 1px solid var(--line); }
+    .feature-item { display: flex; align-items: flex-start; gap: 14px; }
+    .feature-icon { display: grid; flex: 0 0 42px; width: 42px; height: 42px; place-items: center; border-radius: 8px; background: var(--soft-green); color: var(--green); font-size: 19px; }
+    .feature-item:nth-child(2) .feature-icon { background: #f8eee9; color: var(--coral); }
+    .feature-item:nth-child(3) .feature-icon { background: #eaf1f4; color: var(--sky); }
+    .feature-item h2 { margin: 1px 0 4px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; }
+    .feature-item p { margin: 0; color: var(--muted); font-size: 13px; }
+
+    @keyframes arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 850px) {
+      .home-hero { grid-template-columns: 1fr; gap: 34px; padding-top: 16px; }
+      .home-title { max-width: 680px; font-size: 62px; }
+      .home-description { max-width: 600px; }
+      .home-preview { max-width: 680px; }
+    }
+    @media (max-width: 575.98px) {
+      .home-hero { gap: 28px; padding-bottom: 34px; }
+      .home-title { font-size: 48px; }
+      .home-description { margin: 17px 0 22px; font-size: 15px; }
+      .home-preview { padding: 9px; }
+      .preview-top, .preview-bottom { font-size: 10px; }
+      .feature-band { grid-template-columns: 1fr; gap: 18px; }
+    }
+    @media (prefers-reduced-motion: reduce) { .home-copy, .home-preview { animation: none; } }
+</style>
+
+<section class="home-hero" aria-labelledby="home-title">
+    <div class="home-copy">
+        <p class="home-eyebrow">A calmer way to keep learning</p>
+        <h1 id="home-title" class="home-title">Make every study session <em>count.</em></h1>
+        <p class="home-description">Turn your notes into focused quizzes, see how you’re improving, and keep your learning on track.</p>
+        <div class="hero-actions">
+          {% if user.is_authenticated %}
+            {% if user.student %}
+              <a href="{% url 'student_dashboard' %}" class="btn btn-primary">Open your dashboard <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+              <a href="{% url 'quiz_home' %}" class="btn hero-secondary">Go to quiz center</a>
+            {% elif user.parent %}
+              <a href="{% url 'parent_dashboard' %}" class="btn btn-primary">View student progress <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+            {% endif %}
+          {% else %}
+            <a href="{% url 'student_signup' %}" class="btn btn-primary">Start learning <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+            <a href="{% url 'login' %}" class="btn hero-secondary">I have an account</a>
+          {% endif %}
+        </div>
+        <p class="home-note"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Notes, quizzes, and progress in one place</p>
+        {% if not user.is_authenticated %}
+          <p class="parent-link">Following a student? <a href="{% url 'parent_signup' %}">Create a parent account</a></p>
+        {% endif %}
+    </div>
+
+    <div class="home-preview" aria-label="Preview of the Study Guard student dashboard">
+        <div class="preview-top"><span class="preview-label">Your study space</span><span>Progress at a glance</span></div>
+        <div class="preview-window"><img src="{% static 'dashboard.png' %}" alt="Study Guard dashboard showing learning statistics and study actions"></div>
+        <div class="preview-bottom"><span><i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i>Notes become practice</span><span><i class="bi bi-graph-up-arrow me-1" aria-hidden="true"></i>Progress you can follow</span></div>
+    </div>
+</section>
+
+<section class="feature-band" aria-label="Study Guard tools">
+    <article class="feature-item">
+        <span class="feature-icon"><i class="bi bi-file-earmark-arrow-up" aria-hidden="true"></i></span>
+        <div><h2>Bring your notes</h2><p>Keep your study PDFs together.</p></div>
+    </article>
+    <article class="feature-item">
+        <span class="feature-icon"><i class="bi bi-ui-checks-grid" aria-hidden="true"></i></span>
+        <div><h2>Practice with quizzes</h2><p>Review what you’ve learned.</p></div>
+    </article>
+    <article class="feature-item">
+        <span class="feature-icon"><i class="bi bi-bar-chart-line" aria-hidden="true"></i></span>
+        <div><h2>Notice your progress</h2><p>Track scores over time.</p></div>
+    </article>
+</section>
+
+{% endblock %}

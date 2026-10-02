@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container">
+
+    <h2 class="dashboard-title">
+        Quiz Center
+    </h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}" role="status">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card-box mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h3 class="h5 mb-1">Study with flashcards</h3>
+            <p class="text-secondary mb-0">Review key definitions and ideas from your uploaded notes.</p>
+        </div>
+        <a class="btn btn-primary" href="{% url 'flashcard_home' %}"><i class="bi bi-stack me-1" aria-hidden="true"></i> Open flashcards</a>
+    </div>
+
+    <div class="row">
+
+        <!-- Generate Quiz -->
+
+        <div class="col-md-6 mb-4">
+
+            <div class="card-box">
+
+                <h4 class="text-primary mb-4">
+                    Generate Quiz
+                </h4>
+
+                {% if notes %}
+
+                    <div class="list-group">
+
+                        {% for note in notes %}
+
+                            <div class="list-group-item quiz-note-row">
+
+                                <div>
+
+                                    <h6 class="mb-1">
+                                        {{ note.subject }}
+                                    </h6>
+
+                                    <small class="text-muted">
+                                        Uploaded Notes
+                                    </small>
+
+                                </div>
+
+                                <form method="post" action="{% url 'generate_quiz' note.id %}" class="quiz-generator-form">
+                                    {% csrf_token %}
+                                    <div class="quiz-count-picker">
+                                        <label for="quiz-count-{{ note.id }}" class="form-label small mb-1">Questions</label>
+                                        <select id="quiz-count-{{ note.id }}" name="question_count" class="form-select form-select-sm">
+                                            <option value="5" selected>5 questions</option>
+                                            <option value="10">10 questions</option>
+                                            <option value="20">20 questions</option>
+                                            <option value="30">30 questions</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-sm">Start quiz <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></button>
+                                </form>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <div class="alert alert-warning">
+
+                        Upload notes first to generate quizzes.
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        <!-- Quiz History -->
+
+        <div class="col-md-6 mb-4">
+
+            <div class="card-box">
+
+                <h4 class="text-primary mb-4">
+                    Quiz History
+                </h4>
+
+                {% if quizzes %}
+
+                    <div class="table-responsive">
+
+                        <table class="table table-hover">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Subject</th>
+                                    <th>Score</th>
+                                    <th>Date</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                {% for quiz in quizzes %}
+
+                                <tr>
+
+                                    <td>
+                                        {{ quiz.subject }}
+                                    </td>
+
+                                    <td>
+
+                                        <span class="badge bg-success">
+
+                                            {{ quiz.score }}%
+
+                                        </span>
+
+                                    </td>
+
+                                    <td>
+                                        {{ quiz.date }}
+                                    </td>
+
+                                </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="alert alert-info">
+
+                        No quizzes attempted yet.
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+    .quiz-note-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
+    .quiz-generator-form { display: flex; flex-wrap: wrap; align-items: end; gap: 9px; }
+    .quiz-count-picker { width: 142px; }
+    .quiz-generator-form .form-select { min-height: 38px; }
+    @media (max-width: 575.98px) {
+        .quiz-generator-form { width: 100%; }
+        .quiz-generator-form .btn { flex: 1; }
+    }
+</style>
+
+{% endblock %}

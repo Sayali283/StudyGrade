@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        <!-- Sidebar -->
+
+        <div class="col-md-2 mb-4">
+
+            <div class="card-box">
+
+                <h4 class="text-primary mb-4">
+                    Dashboard
+                </h4>
+
+                <div class="d-grid gap-3">
+
+                    <a href="/student/dashboard/"
+                    class="btn btn-primary">
+
+                        Dashboard
+                    </a>
+
+                    <a href="/student/notes/"
+                    class="btn btn-outline-primary">
+
+                        Notes
+                    </a>
+
+                    <a href="/student/quiz/"
+                    class="btn btn-outline-success">
+
+                        Quiz
+                    </a>
+
+                    <a href="{% url 'flashcard_home' %}"
+                    class="btn btn-outline-primary">
+
+                        Flashcards
+                    </a>
+
+                    <a href="{% url 'pomodoro_timer' %}"
+                    class="btn btn-outline-primary">
+
+                        Pomodoro
+
+                    </a>
+
+                    <a href="/student/progress/"
+                    class="btn btn-outline-dark">
+
+                        Progress
+                    </a>
+
+                    <a href="/logout/"
+                    class="btn btn-outline-danger">
+
+                        Logout
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Main Dashboard -->
+
+        <div class="col-md-10">
+
+            <section class="dashboard-hero" aria-label="Student study summary">
+                <div class="dashboard-hero-copy">
+                    <p class="dashboard-eyebrow"><span></span> Your study space</p>
+                    <h1>Welcome back,<br><em>{{ student.user.first_name }}</em></h1>
+                    <p class="dashboard-hero-description">Keep your notes moving into practice, one focused session at a time.</p>
+                    <a class="dashboard-hero-action" href="{% url 'pomodoro_timer' %}"><i class="bi bi-stopwatch" aria-hidden="true"></i> Start a focus session <i class="bi bi-arrow-up-right ms-1" aria-hidden="true"></i></a>
+                </div>
+                <aside class="hero-streak" aria-label="Current study streak">
+                    <div class="hero-streak-label"><i class="bi bi-fire" aria-hidden="true"></i> Current streak</div>
+                    <p class="hero-streak-count">{{ current_streak }} <span>{% if current_streak == 1 %}day{% else %}days{% endif %}</span></p>
+                    <p class="hero-streak-note">{% if current_streak %}Complete a quiz or focus block today to keep it going.{% else %}Complete a quiz or focus block to start your streak.{% endif %}</p>
+                </aside>
+            </section>
+
+            <div class="row g-4">
+
+                <div class="col-6 col-xl">
+
+                    <div class="card-box text-center dashboard-metric metric-notes">
+
+                        <h5 class="text-secondary">
+                            <i class="bi bi-journal-text metric-icon" aria-hidden="true"></i> Total Notes
+                        </h5>
+
+                        <div class="stat-number">
+                            {{ total_notes }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-6 col-xl">
+
+                    <div class="card-box text-center dashboard-metric metric-quizzes">
+
+                        <h5 class="text-secondary">
+                            <i class="bi bi-ui-checks-grid metric-icon" aria-hidden="true"></i> Total Quizzes
+                        </h5>
+
+                        <div class="stat-number">
+                            {{ total_quizzes }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-6 col-xl">
+
+                    <div class="card-box text-center dashboard-metric metric-average">
+
+                        <h5 class="text-secondary">
+                            <i class="bi bi-graph-up-arrow metric-icon" aria-hidden="true"></i> Average Score
+                        </h5>
+
+                        <div class="stat-number">
+                            {{ avg_score }}%
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-6 col-xl">
+
+                    <div class="card-box text-center dashboard-metric metric-last-score">
+
+                        <h5 class="text-secondary">
+                            <i class="bi bi-speedometer2 metric-icon" aria-hidden="true"></i> Last Score
+                        </h5>
+
+                        <div class="stat-number">
+                            {{ last_score }}%
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="row g-4 mt-3">
+                <div class="col-lg-7">
+                    <section class="card-box">
+                        <h4 class="mb-4 text-primary">Quick Actions</h4>
+                        <div class="d-flex flex-wrap gap-3">
+                            <a href="{% url 'student_notes' %}" class="btn btn-primary">Upload Notes</a>
+                            <a href="{% url 'quiz_home' %}" class="btn btn-success">Generate Quiz</a>
+                            <a href="{% url 'flashcard_home' %}" class="btn btn-outline-primary">Study Flashcards</a>
+                            <a href="{% url 'pomodoro_timer' %}" class="btn btn-outline-primary"><i class="bi bi-stopwatch me-1" aria-hidden="true"></i> Start Pomodoro</a>
+                            <a href="{% url 'student_progress' %}" class="btn btn-dark">View Progress</a>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="col-lg-5">
+                    <aside class="thought-card h-100" aria-label="Daily motivational thought">
+                        <span class="thought-icon"><i class="bi bi-quote" aria-hidden="true"></i></span>
+                        <p class="thought-label">A thought for today</p>
+                        <blockquote>{{ daily_thought }}</blockquote>
+                        <a href="{% url 'pomodoro_timer' %}" class="thought-link">Give it 25 focused minutes <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+                    </aside>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+    .dashboard-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(220px, .7fr);
+        gap: 24px;
+        align-items: center;
+        margin-bottom: 28px;
+        padding: 30px 34px;
+        border-radius: 8px;
+        background: var(--ink);
+        color: #fff;
+    }
+    .dashboard-hero-copy { min-width: 0; }
+    .dashboard-eyebrow { display: flex; align-items: center; gap: 9px; margin: 0 0 12px; color: #b9d5c7; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .dashboard-eyebrow span { width: 7px; height: 7px; border-radius: 50%; background: #e89b78; }
+    .dashboard-hero h1 { margin: 0; color: #fff; font-family: 'DM Serif Display', Georgia, serif; font-size: 42px; line-height: 1.08; }
+    .dashboard-hero h1 em { color: #e9aa8d; font-style: normal; }
+    .dashboard-hero-description { max-width: 480px; margin: 13px 0 18px; color: #cfddd5; font-size: 14px; }
+    .dashboard-hero-action { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 9px 14px; border-radius: 5px; background: #fff; color: var(--green-dark); font-size: 13px; font-weight: 700; text-decoration: none; transition: transform .2s ease, background-color .2s ease; }
+    .dashboard-hero-action:hover { transform: translateY(-1px); background: #f7e6dc; color: var(--ink); }
+    .hero-streak { padding: 20px 22px; border: 1px solid rgba(255, 255, 255, .17); border-radius: 7px; background: rgba(255, 255, 255, .08); }
+    .hero-streak-label { display: flex; align-items: center; gap: 8px; color: #f3c1a9; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+    .hero-streak-count { margin: 10px 0 4px; color: #fff; font-size: 48px; font-weight: 700; line-height: 1; }
+    .hero-streak-count span { font-size: 17px; font-weight: 500; }
+    .hero-streak-note { margin: 0; color: #cfddd5; font-size: 12px; line-height: 1.5; }
+    .dashboard-metric { position: relative; min-height: 135px; overflow: hidden; padding-top: 21px; }
+    .dashboard-metric::before { position: absolute; top: 0; right: 0; left: 0; height: 3px; background: var(--metric-accent); content: ''; }
+    .dashboard-metric h5 { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 24px; font-size: 13px; }
+    .metric-icon { color: var(--metric-accent); font-size: 14px; }
+    .metric-notes { --metric-accent: var(--green); }
+    .metric-quizzes { --metric-accent: var(--coral); }
+    .metric-average { --metric-accent: var(--sky); }
+    .metric-last-score { --metric-accent: #8b7957; }
+    .dashboard-metric .stat-number { margin-top: 10px; font-size: 34px; }
+    .thought-card {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        min-height: 190px;
+        padding: 25px 28px;
+        border: 1px solid #eadbd3;
+        border-left: 4px solid var(--coral);
+        border-radius: 8px;
+        background: #fbf6f2;
+    }
+    .thought-icon { color: var(--coral); font-size: 24px; line-height: 1; }
+    .thought-label { margin: 9px 0 4px; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .thought-card blockquote { max-width: 34ch; margin: 0; color: var(--ink); font-family: 'DM Serif Display', Georgia, serif; font-size: 21px; line-height: 1.35; }
+    .thought-link { margin-top: 15px; color: var(--green-dark); font-size: 13px; font-weight: 700; text-decoration: none; }
+    .thought-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+    @media (max-width: 1199.98px) { .dashboard-hero { grid-template-columns: minmax(0, 1fr) minmax(200px, .7fr); } }
+    @media (max-width: 767.98px) { .dashboard-hero { grid-template-columns: 1fr; padding: 25px; } .hero-streak { max-width: none; } }
+    @media (max-width: 575.98px) { .dashboard-hero h1 { font-size: 34px; } .dashboard-hero { padding: 21px; } .hero-streak { padding: 17px; } }
+</style>
+
+{% endblock %}

@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="pomodoro-page" aria-labelledby="pomodoro-title">
+    <div class="pomodoro-heading">
+        <a class="small text-success fw-bold text-decoration-none" href="{% url 'student_dashboard' %}"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Student dashboard</a>
+        <p class="text-uppercase fw-bold text-success small mt-3 mb-1">Focus practice</p>
+        <h1 id="pomodoro-title" class="dashboard-title mb-2">Pomodoro timer</h1>
+        <p class="text-secondary">One focused session at a time. Completed focus sessions add to your study streak.</p>
+    </div>
+
+    <div class="pomodoro-layout">
+        <section class="timer-panel" aria-label="Pomodoro timer controls">
+            <div class="timer-topline">
+                <span class="timer-mode" id="timer-mode" aria-live="polite">Focus session</span>
+                <label class="duration-picker" for="focus-duration">
+                    Focus length
+                    <select id="focus-duration" class="form-select form-select-sm">
+                        <option value="25" selected>25 min</option>
+                        <option value="40">40 min</option>
+                        <option value="50">50 min</option>
+                    </select>
+                </label>
+            </div>
+
+            <div class="timer-ring" id="timer-ring" role="timer" aria-live="off">
+                <div class="timer-face">
+                    <span class="timer-digits" id="timer-display">25:00</span>
+                    <span class="timer-caption" id="timer-caption">Ready when you are</span>
+                </div>
+            </div>
+
+            <div class="timer-controls">
+                <button class="btn btn-primary timer-start" id="timer-toggle" type="button"><i class="bi bi-play-fill me-1" aria-hidden="true"></i> Start focus</button>
+                <button class="btn btn-outline-dark" id="timer-reset" type="button"><i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i> Reset</button>
+            </div>
+
+            <p class="timer-status" id="timer-status" role="status" aria-live="polite">Choose one task, then begin.</p>
+
+            <form id="focus-complete-form" method="post" action="{% url 'complete_pomodoro_session' %}" hidden>
+                {% csrf_token %}
+            </form>
+        </section>
+
+        <aside class="rhythm-panel" aria-label="Pomodoro session guide">
+            <p class="rhythm-label">Your rhythm</p>
+            <h2>Focus, then reset.</h2>
+            <ol class="rhythm-steps">
+                <li><span class="rhythm-number">01</span><span><strong>Focus</strong><small id="focus-guide">25 minutes on one task</small></span></li>
+                <li><span class="rhythm-number">02</span><span><strong>Short break</strong><small>5 minutes to stretch and reset</small></span></li>
+                <li><span class="rhythm-number">03</span><span><strong>Long break</strong><small>15 minutes after four focus blocks</small></span></li>
+            </ol>
+            <div class="completed-count">
+                <span class="completed-icon"><i class="bi bi-check2-circle" aria-hidden="true"></i></span>
+                <span><strong id="completed-focus-count">0</strong><small>focus blocks completed on this device</small></span>
+            </div>
+            <p class="rhythm-thought">“{{ daily_thought }}”</p>
+        </aside>
+    </div>
+</section>
+
+<style>
+    .pomodoro-page { max-width: 1080px; margin-inline: auto; }
+    .pomodoro-heading { margin-bottom: 25px; }
+    .pomodoro-heading > p:last-child { margin-bottom: 0; }
+    .pomodoro-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr); gap: 20px; align-items: stretch; }
+    .timer-panel, .rhythm-panel { padding: clamp(20px, 4vw, 34px); border: 1px solid var(--line); border-radius: 8px; background: #fff; box-shadow: 0 8px 24px rgba(31, 56, 47, .045); }
+    .timer-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .timer-mode { color: var(--green-dark); font-size: 14px; font-weight: 700; }
+    .duration-picker { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .duration-picker .form-select { width: 105px; min-height: 36px; }
+    .timer-ring { display: grid; width: 270px; aspect-ratio: 1; place-items: center; margin: 30px auto; border-radius: 50%; background: conic-gradient(var(--green) calc(var(--timer-progress, 100) * 1%), #e6ece7 0); transition: background .3s ease; }
+    .timer-ring.is-break { background: conic-gradient(var(--coral) calc(var(--timer-progress, 100) * 1%), #f0e7e1 0); }
+    .timer-face { display: flex; width: 226px; aspect-ratio: 1; flex-direction: column; align-items: center; justify-content: center; border-radius: 50%; background: #fff; }
+    .timer-digits { color: var(--ink); font-size: 54px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+    .timer-caption { margin-top: 11px; color: var(--muted); font-size: 12px; }
+    .timer-controls { display: flex; justify-content: center; gap: 10px; }
+    .timer-start { min-width: 150px; }
+    .timer-status { min-height: 24px; margin: 17px 0 0; color: var(--muted); font-size: 13px; text-align: center; }
+    .rhythm-panel { display: flex; flex-direction: column; }
+    .rhythm-label { margin-bottom: 7px; color: var(--coral); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .rhythm-panel h2 { margin: 0; font-family: 'DM Serif Display', Georgia, serif; font-size: 31px; }
+    .rhythm-steps { display: grid; gap: 0; margin: 25px 0; padding: 0; list-style: none; }
+    .rhythm-steps li { display: flex; gap: 14px; padding: 15px 0; border-bottom: 1px solid var(--line); }
+    .rhythm-number { color: var(--coral); font-size: 12px; font-weight: 700; }
+    .rhythm-steps strong, .completed-count strong { display: block; color: var(--ink); font-size: 14px; }
+    .rhythm-steps small, .completed-count small { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
+    .completed-count { display: flex; align-items: center; gap: 12px; margin-top: auto; padding-top: 4px; }
+    .completed-icon { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 8px; background: var(--soft-green); color: var(--green); font-size: 18px; }
+    .rhythm-thought { margin: 23px 0 0; padding: 15px 16px; border-left: 3px solid var(--coral); background: #fbf6f2; color: var(--muted); font-family: 'DM Serif Display', Georgia, serif; font-size: 16px; line-height: 1.45; }
+    @media (max-width: 760px) { .pomodoro-layout { grid-template-columns: 1fr; } }
+    @media (max-width: 420px) { .timer-ring { width: 230px; } .timer-face { width: 190px; } .timer-digits { font-size: 46px; } .timer-controls { flex-wrap: wrap; } }
+    @media (prefers-reduced-motion: reduce) { .timer-ring { transition: none; } }
+</style>
+
+<script>
+    (() => {
+        const storageKey = 'studyGuardPomodoro-{{ request.user.id }}';
+        const focusDurationSelect = document.getElementById('focus-duration');
+        const timerDisplay = document.getElementById('timer-display');
+        const timerCaption = document.getElementById('timer-caption');
+        const timerMode = document.getElementById('timer-mode');
+        const timerRing = document.getElementById('timer-ring');
+        const timerToggle = document.getElementById('timer-toggle');
+        const timerStatus = document.getElementById('timer-status');
+        const completeForm = document.getElementById('focus-complete-form');
+        let ticker = null;
+        let state = {
+            mode: 'focus',
+            focusMinutes: 25,
+            remainingSeconds: 25 * 60,
+            endAt: null,
+            running: false,
+            completedFocus: 0
+        };
+
+        try {
+            const savedState = JSON.parse(localStorage.getItem(storageKey) || 'null');
+            if (savedState && [25, 40, 50].includes(savedState.focusMinutes) && ['focus', 'short-break', 'long-break'].includes(savedState.mode)) {
+                state = { ...state, ...savedState };
+                if (state.running && Number.isFinite(state.endAt)) {
+                    state.remainingSeconds = Math.max(0, Math.ceil((state.endAt - Date.now()) / 1000));
+                } else {
+                    state.running = false;
+                    state.endAt = null;
+                }
+                if (!Number.isFinite(state.remainingSeconds) || state.remainingSeconds < 0) {
+                    state.mode = 'focus';
+                    state.remainingSeconds = state.focusMinutes * 60;
+                    state.running = false;
+                    state.endAt = null;
+                }
+            }
+        } catch (error) {
+            try { localStorage.removeItem(storageKey); } catch (storageError) { /* Storage is unavailable. */ }
+        }
+
+        focusDurationSelect.value = String(state.focusMinutes);
+
+        function phaseDuration() {
+            if (state.mode === 'short-break') return 5 * 60;
+            if (state.mode === 'long-break') return 15 * 60;
+            return state.focusMinutes * 60;
+        }
+
+        function saveState() {
+            try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch (error) { /* Timer still works without storage. */ }
+        }
+
+        function render() {
+            const minutes = Math.floor(state.remainingSeconds / 60).toString().padStart(2, '0');
+            const seconds = (state.remainingSeconds % 60).toString().padStart(2, '0');
+            timerDisplay.textContent = `${minutes}:${seconds}`;
+            timerMode.textContent = state.mode === 'focus' ? 'Focus session' : state.mode === 'short-break' ? 'Short break' : 'Long break';
+            timerCaption.textContent = state.running ? 'Stay with this moment' : state.remainingSeconds === phaseDuration() ? 'Ready when you are' : 'Paused';
+            timerToggle.innerHTML = state.running
+                ? '<i class="bi bi-pause-fill me-1" aria-hidden="true"></i> Pause'
+                : `<i class="bi bi-play-fill me-1" aria-hidden="true"></i> ${state.remainingSeconds === phaseDuration() ? 'Start' : 'Resume'} ${state.mode === 'focus' ? 'focus' : 'break'}`;
+            timerRing.classList.toggle('is-break', state.mode !== 'focus');
+            timerRing.style.setProperty('--timer-progress', Math.round((state.remainingSeconds / phaseDuration()) * 100));
+            focusDurationSelect.disabled = state.running || state.mode !== 'focus';
+            document.getElementById('focus-guide').textContent = `${state.focusMinutes} minutes on one task`;
+            document.getElementById('completed-focus-count').textContent = state.completedFocus;
+            document.title = `${minutes}:${seconds} · Study Guard`;
+        }
+
+        async function finishPhase() {
+            state.running = false;
+            state.endAt = null;
+            state.remainingSeconds = 0;
+            if (state.mode === 'focus') {
+                state.completedFocus += 1;
+                const longBreak = state.completedFocus % 4 === 0;
+                state.mode = longBreak ? 'long-break' : 'short-break';
+                state.remainingSeconds = phaseDuration();
+                timerStatus.textContent = longBreak ? 'Focus block complete. Take a 15-minute long break.' : 'Focus block complete. Take a 5-minute break.';
+                saveState();
+                render();
+                try {
+                    const response = await fetch(completeForm.action, {
+                        method: 'POST',
+                        body: new FormData(completeForm),
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    if (response.ok) {
+                        const result = await response.json();
+                        timerStatus.textContent += ` Study streak: ${result.current_streak} day${result.current_streak === 1 ? '' : 's'}.`;
+                    }
+                } catch (error) {
+                    timerStatus.textContent += ' Your timer is saved; reconnect to update your streak.';
+                }
+            } else {
+                state.mode = 'focus';
+                state.remainingSeconds = phaseDuration();
+                timerStatus.textContent = 'Break finished. Ready for another focus block?';
+                saveState();
+                render();
+            }
+        }
+
+        function tick() {
+            state.remainingSeconds = Math.max(0, Math.ceil((state.endAt - Date.now()) / 1000));
+            if (state.remainingSeconds === 0) {
+                window.clearInterval(ticker);
+                ticker = null;
+                finishPhase();
+            } else {
+                render();
+                saveState();
+            }
+        }
+
+        timerToggle.addEventListener('click', () => {
+            if (state.running) {
+                state.remainingSeconds = Math.max(0, Math.ceil((state.endAt - Date.now()) / 1000));
+                state.running = false;
+                state.endAt = null;
+                window.clearInterval(ticker);
+                ticker = null;
+            } else {
+                state.running = true;
+                state.endAt = Date.now() + state.remainingSeconds * 1000;
+                ticker = window.setInterval(tick, 1000);
+                timerStatus.textContent = state.mode === 'focus' ? 'Focus started. You can do this.' : 'Break started. Rest without rushing.';
+            }
+            saveState();
+            render();
+        });
+
+        document.getElementById('timer-reset').addEventListener('click', () => {
+            if (ticker) window.clearInterval(ticker);
+            ticker = null;
+            state.mode = 'focus';
+            state.focusMinutes = Number(focusDurationSelect.value);
+            state.remainingSeconds = phaseDuration();
+            state.endAt = null;
+            state.running = false;
+            timerStatus.textContent = 'Timer reset. Start when you are ready.';
+            saveState();
+            render();
+        });
+
+        focusDurationSelect.addEventListener('change', () => {
+            state.focusMinutes = Number(focusDurationSelect.value);
+            state.remainingSeconds = phaseDuration();
+            saveState();
+            render();
+        });
+
+        if (state.running && state.remainingSeconds === 0) {
+            finishPhase();
+        } else {
+            render();
+            if (state.running) ticker = window.setInterval(tick, 1000);
+        }
+    })();
+</script>
+{% endblock %}
