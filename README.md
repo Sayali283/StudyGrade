@@ -277,17 +277,7 @@ Study-Guard
 
 # ⚙️ Installation Guide
 
-## 1. Clone the Repository
-
-```bash
-git clone https://github.com/Sachingupta209/Study-Guard.git
-
-cd Study-Guard
-```
-
----
-
-## 2. Create a Virtual Environment
+## 1. Create a Virtual Environment
 
 ### Windows
 
@@ -307,7 +297,7 @@ source venv/bin/activate
 
 ---
 
-## 3. Install Dependencies
+## 2. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -315,7 +305,7 @@ pip install -r requirements.txt
 
 ---
 
-## 4. Configure PostgreSQL Database
+## 3. Configure PostgreSQL Database
 
 Update the database configuration inside:
 
@@ -340,7 +330,7 @@ DATABASES = {
 
 ---
 
-## 5. Apply Database Migrations
+## 4. Apply Database Migrations
 
 ```bash
 python manage.py makemigrations
@@ -350,7 +340,7 @@ python manage.py migrate
 
 ---
 
-## 6. Create an Admin User (Optional)
+## 5. Create an Admin User (Optional)
 
 ```bash
 python manage.py createsuperuser
@@ -358,7 +348,7 @@ python manage.py createsuperuser
 
 ---
 
-## 7. Run the Development Server
+## 6. Run the Development Server
 
 ```bash
 python manage.py runserver
@@ -575,5 +565,6 @@ If you'd like to improve Study Guard:
 **Built with Python, Django & PostgreSQL**
 
 </div>
-#   S t u d y G r a d e  
+#   S t u d y G r a d e 
+ 
  
