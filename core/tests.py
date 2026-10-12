@@ -357,3 +357,124 @@ class TopicAnalyticsTests(TestCase):
 		self.assertContains(progress_response, "Give Cell biology another review")
 		self.assertContains(progress_response, "Topic accuracy")
 		self.assertEqual(progress_response.context["recommended_topic"]["topic"], "Cell biology")
+
+
+class NoteDeletionAndSecurityTests(TestCase):
+	def setUp(self):
+		self.user1 = User.objects.create_user(
+			username="student1@example.com",
+			email="student1@example.com",
+			password="password1",
+		)
+		self.student1 = Student.objects.create(user=self.user1, class_semester="BCA")
+
+		self.user2 = User.objects.create_user(
+			username="student2@example.com",
+			email="student2@example.com",
+			password="password2",
+		)
+		self.student2 = Student.objects.create(user=self.user2, class_semester="BCA")
+
+		self.note1 = Notes.objects.create(
+			student=self.student1,
+			subject="Chemistry",
+			file=SimpleUploadedFile("chem.txt", b"Covalent and ionic bonds in chemistry."),
+		)
+		self.quiz1 = Quiz.objects.create(student=self.student1, subject="Chemistry")
+		self.question1 = Question.objects.create(
+			quiz=self.quiz1,
+			question_text="What is a covalent bond?",
+			topic="Bonding",
+			option_a="Shared electrons",
+			option_b="Transfer electrons",
+			option_c="No interaction",
+			option_d="Nuclear force",
+			correct_answer="Shared electrons",
+		)
+
+	def test_delete_note_url_and_alias(self):
+		self.client.force_login(self.user1)
+		response = self.client.get(reverse("delete_note", args=[self.note1.id]))
+		self.assertRedirects(response, reverse("student_notes"))
+		self.assertFalse(Notes.objects.filter(id=self.note1.id).exists())
+
+	def test_student_cannot_take_another_students_quiz(self):
+		self.client.force_login(self.user2)
+		response = self.client.get(reverse("take_quiz", args=[self.quiz1.id]))
+		self.assertEqual(response.status_code, 404)
+
+	def test_view_quiz_result_renders_student_answers(self):
+		self.client.force_login(self.user1)
+		QuestionAnswer.objects.create(
+			question=self.question1,
+			selected_answer="Shared electrons",
+			is_correct=True,
+		)
+		response = self.client.get(reverse("view_quiz_result", args=[self.quiz1.id]))
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Shared electrons")
+		self.assertContains(response, "Correct")
+
+	def test_view_note_authorization(self):
+		# Student owner can view
+		self.client.force_login(self.user1)
+		response = self.client.get(reverse("view_note", args=[self.note1.id]))
+		self.assertEqual(response.status_code, 200)
+
+		# Another student is denied (404)
+		self.client.force_login(self.user2)
+		response = self.client.get(reverse("view_note", args=[self.note1.id]))
+		self.assertEqual(response.status_code, 404)
+
+		# Linked parent can view
+		parent_user = User.objects.create_user(
+			username="parent@example.com",
+			email="parent@example.com",
+			password="password3",
+		)
+		Parent.objects.create(user=parent_user, student=self.student1)
+		self.client.force_login(parent_user)
+		response = self.client.get(reverse("view_note", args=[self.note1.id]))
+		self.assertEqual(response.status_code, 200)
+
+
+class ApiAndServiceLayerTests(TestCase):
+	def setUp(self):
+		self.user = User.objects.create_user(
+			username="api_student@example.com",
+			email="api_student@example.com",
+			password="test-password",
+		)
+		self.student = Student.objects.create(user=self.user, class_semester="MCA")
+		self.note = Notes.objects.create(
+			student=self.student,
+			subject="Computer Networks",
+			file=SimpleUploadedFile("networks.txt", b"OSI model has seven distinct layers."),
+		)
+
+	def test_api_health_endpoint(self):
+		response = self.client.get(reverse("api_health"))
+		self.assertEqual(response.status_code, 200)
+		data = response.json()
+		self.assertEqual(data["status"], "success")
+		self.assertEqual(data["data"]["status"], "healthy")
+
+	def test_api_streak_endpoint_authenticated(self):
+		self.client.force_login(self.user)
+		record_study_day(self.student)
+		response = self.client.get(reverse("api_streak"))
+		self.assertEqual(response.status_code, 200)
+		data = response.json()
+		self.assertEqual(data["status"], "success")
+		self.assertEqual(data["data"]["current_streak"], 1)
+
+	def test_api_notes_list(self):
+		self.client.force_login(self.user)
+		response = self.client.get(reverse("api_notes_list"))
+		self.assertEqual(response.status_code, 200)
+		data = response.json()
+		self.assertEqual(len(data["data"]["notes"]), 1)
+		self.assertEqual(data["data"]["notes"][0]["subject"], "Computer Networks")
+
+
+

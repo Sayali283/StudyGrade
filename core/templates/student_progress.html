@@ -1,103 +1,75 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 
 <div class="container">
-
-    <h2 class="dashboard-title">
-
-        Student Progress Analytics
-
-    </h2>
-
-    <!-- Stats -->
-
-    <div class="row g-4 mb-5">
-
-        <div class="col-md-3">
-
-            <div class="card-box text-center">
-
-                <h5 class="text-secondary">
-                    Total Quizzes
-                </h5>
-
-                <div class="stat-number text-primary">
-
-                    {{ total_quizzes }}
-
-                </div>
-
-            </div>
-
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <span class="dashboard-eyebrow">
+                <i class="bi bi-graph-up"></i> Mastery & Analytics
+            </span>
+            <h2 class="dashboard-title mb-0">Student Progress Analytics</h2>
         </div>
-
-        <div class="col-md-3">
-
-            <div class="card-box text-center">
-
-                <h5 class="text-secondary">
-                    Average Score
-                </h5>
-
-                <div class="stat-number text-success">
-
-                    {{ average_score }}%
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="col-md-3">
-
-            <div class="card-box text-center">
-
-                <h5 class="text-secondary">
-                    Best Score
-                </h5>
-
-                <div class="stat-number text-info">
-
-                    {{ best_score }}%
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="col-md-3">
-
-            <div class="card-box text-center">
-
-                <h5 class="text-secondary">
-                    Lowest Score
-                </h5>
-
-                <div class="stat-number text-danger">
-
-                    {{ worst_score }}%
-
-                </div>
-
-            </div>
-
-        </div>
-
+        <a href="{% url 'student_dashboard' %}" class="btn btn-outline-dark">
+            <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
     </div>
 
-    <section class="study-next-panel mb-5" aria-labelledby="study-next-title">
+    <!-- Stats Grid -->
+    <div class="row g-4 mb-4">
+        <div class="col-6 col-xl-3">
+            <div class="stat-card fade-up-item" style="--stat-accent: var(--ember-500);">
+                <div class="stat-icon">
+                    <i class="bi bi-ui-checks-grid" aria-hidden="true"></i>
+                </div>
+                <div class="stat-label">Total Quizzes</div>
+                <div class="stat-number" data-countup="{{ total_quizzes }}">{{ total_quizzes }}</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+            <div class="stat-card lime-accent fade-up-item" style="--stat-accent: var(--lime-500);">
+                <div class="stat-icon">
+                    <i class="bi bi-pie-chart-fill" aria-hidden="true"></i>
+                </div>
+                <div class="stat-label">Average Score</div>
+                <div class="stat-number" data-countup="{{ average_score }}%">{{ average_score }}%</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+            <div class="stat-card fade-up-item" style="--stat-accent: #5bc0be;">
+                <div class="stat-icon" style="background: rgba(91, 192, 190, 0.12); color: #5bc0be;">
+                    <i class="bi bi-trophy-fill" aria-hidden="true"></i>
+                </div>
+                <div class="stat-label">Best Score</div>
+                <div class="stat-number" data-countup="{{ best_score }}%">{{ best_score }}%</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+            <div class="stat-card fade-up-item" style="--stat-accent: var(--color-danger);">
+                <div class="stat-icon" style="background: rgba(255, 90, 95, 0.12); color: var(--color-danger);">
+                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                </div>
+                <div class="stat-label">Lowest Score</div>
+                <div class="stat-number" data-countup="{{ worst_score }}%">{{ worst_score }}%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Study Next Recommendation Panel -->
+    <section class="card-box mb-4 fade-up-item" aria-labelledby="study-next-title" style="border-left: 4px solid var(--ember-500);">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
-                <p class="text-uppercase fw-bold small mb-2">Study next</p>
+                <span class="badge bg-primary mb-2"><i class="bi bi-lightning-charge-fill me-1"></i> AI Recommendation</span>
                 {% if recommended_topic %}
-                    <h3 id="study-next-title" class="h4 mb-2">Give {{ recommended_topic.topic }} another review</h3>
-                    <p class="mb-0">{{ recommended_topic.accuracy }}% accuracy across {{ recommended_topic.attempts }} answered question{{ recommended_topic.attempts|pluralize }}. Review this topic, then try another quiz.</p>
+                    <h3 id="study-next-title" class="h4 text-primary mb-1 fw-bold">Give {{ recommended_topic.topic }} another review</h3>
+                    <p class="text-secondary mb-0">{{ recommended_topic.accuracy }}% accuracy across {{ recommended_topic.attempts }} answered question{{ recommended_topic.attempts|pluralize }}. Review this topic to boost mastery.</p>
                 {% else %}
-                    <h3 id="study-next-title" class="h4 mb-2">Take a quiz to find your focus area</h3>
-                    <p class="mb-0">After your next quiz, topic-level results will suggest what to review.</p>
+                    <h3 id="study-next-title" class="h4 text-primary mb-1 fw-bold">Take a quiz to find your focus area</h3>
+                    <p class="text-secondary mb-0">After your next quiz, topic-level results will suggest where to focus your review.</p>
                 {% endif %}
             </div>
             <div class="d-flex flex-wrap gap-2">
@@ -107,199 +79,153 @@
         </div>
     </section>
 
-    <!-- Chart -->
-
-    <div class="card-box mb-5">
-
-        <h3 class="text-primary mb-4">
-
-            Quiz Performance Chart
-
-        </h3>
-
-        <canvas id="scoreChart"></canvas>
-
+    <!-- Score Progression Chart -->
+    <div class="card-box mb-4 fade-up-item">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h3 class="h4 text-primary mb-0">
+                <i class="bi bi-graph-up me-2" style="color: var(--ember-500);"></i> Score Progression Timeline
+            </h3>
+            <span class="badge bg-primary">Over Time</span>
+        </div>
+        <div style="position: relative; height: 300px;">
+            <canvas id="scoreChart"></canvas>
+        </div>
     </div>
 
-    <section class="card-box mb-5 topic-performance" aria-labelledby="topic-performance-title">
-        <h3 id="topic-performance-title" class="text-primary mb-4">Topic accuracy</h3>
+    <!-- Topic Accuracy Breakdown -->
+    <section class="card-box mb-4 fade-up-item topic-performance" aria-labelledby="topic-performance-title">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h3 id="topic-performance-title" class="h4 text-primary mb-0">
+                <i class="bi bi-bar-chart-steps me-2" style="color: var(--lime-500);"></i> Topic accuracy
+            </h3>
+            <span class="badge bg-success">Topic Insights</span>
+        </div>
         {% if topic_performance %}
-            <div class="topic-chart-wrap">
+            <div class="topic-chart-wrap" style="position: relative; height: 260px;">
                 <canvas id="topicChart" aria-label="Quiz accuracy by topic"></canvas>
             </div>
             <div class="table-responsive mt-4">
-                <table class="table table-hover mb-0">
+                <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr><th>Topic</th><th>Correct</th><th>Answered</th><th>Accuracy</th></tr>
                     </thead>
                     <tbody>
                         {% for item in topic_performance %}
                             <tr>
-                                <td>{{ item.topic }}</td>
+                                <td><span class="fw-bold text-primary">{{ item.topic }}</span></td>
                                 <td>{{ item.correct }}</td>
                                 <td>{{ item.attempts }}</td>
-                                <td><span class="badge {% if item.accuracy < 60 %}bg-danger{% elif item.accuracy < 80 %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ item.accuracy }}%</span></td>
+                                <td><span class="badge {% if item.accuracy < 60 %}bg-danger{% elif item.accuracy < 80 %}bg-warning{% else %}bg-success{% endif %}">{{ item.accuracy }}%</span></td>
                             </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         {% else %}
-            <div class="alert alert-info mb-0">Topic insights will appear after you answer a quiz with topic-tagged questions.</div>
+            <div class="alert alert-info mb-0">Topic insights will appear after you answer quizzes with tagged topics.</div>
         {% endif %}
     </section>
 
-    <!-- Table -->
-
-    <div class="card-box">
-
-        <h3 class="text-primary mb-4">
-
-            Quiz Performance Table
-
-        </h3>
+    <!-- Detailed Quiz History Table -->
+    <div class="card-box fade-up-item">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h3 class="h4 text-primary mb-0">
+                <i class="bi bi-table me-2" style="color: var(--ember-500);"></i> All Quiz Attempts
+            </h3>
+            <span class="badge bg-secondary">{{ quizzes|length }} Records</span>
+        </div>
 
         {% if quizzes %}
-
         <div class="table-responsive">
-
-            <table class="table table-hover">
-
+            <table class="table table-hover align-middle">
                 <thead>
-
                     <tr>
-
                         <th>#</th>
                         <th>Subject</th>
                         <th>Score</th>
-
+                        <th>Date</th>
                     </tr>
-
                 </thead>
-
                 <tbody>
-
                     {% for quiz in quizzes %}
-
                     <tr>
-
+                        <td><span class="badge bg-secondary">{{ forloop.counter }}</span></td>
+                        <td><span class="fw-bold text-primary">{{ quiz.subject }}</span></td>
                         <td>
-
-                            {{ forloop.counter }}
-
-                        </td>
-
-                        <td>
-
-                            {{ quiz.subject }}
-
-                        </td>
-
-                        <td>
-
-                            <span class="badge bg-success fs-6">
-
+                            <span class="badge {% if quiz.score >= 80 %}bg-success{% elif quiz.score >= 50 %}bg-warning{% else %}bg-danger{% endif %} fs-6">
                                 {{ quiz.score }}%
-
                             </span>
-
                         </td>
-
+                        <td><small class="text-secondary">{{ quiz.date|date:"M j, Y, g:i a"|default:quiz.date }}</small></td>
                     </tr>
-
                     {% endfor %}
-
                 </tbody>
-
             </table>
-
         </div>
-
         {% else %}
-
-        <div class="alert alert-warning">
-
-            No quiz data available.
-
+        <div class="text-center py-4 text-secondary">
+            <p class="mb-0">No quiz data available yet. Complete a quiz to start building your record.</p>
         </div>
-
         {% endif %}
-
     </div>
 
 </div>
 
-<!-- Chart.js -->
-
+<!-- Chart.js Setup with Theme Colors -->
 {{ topic_chart_data|json_script:"topic-chart-data" }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-
 const labels = [
-
     {% for quiz in quizzes %}
-
         "Quiz {{ forloop.counter }}",
-
     {% endfor %}
-
 ];
 
 const scores = [
-
     {% for quiz in quizzes %}
-
         {{ quiz.score|default:0 }},
-
     {% endfor %}
-
 ];
 
 const ctx = document.getElementById('scoreChart').getContext('2d');
 
 new Chart(ctx, {
-
     type: 'line',
-
     data: {
-
         labels: labels,
-
         datasets: [{
-
-            label: 'Quiz Scores',
-
+            label: 'Score (%)',
             data: scores,
-
             borderWidth: 3,
-
-            tension: 0.3,
-
-            fill: false
-
+            borderColor: '#FF6B35',
+            backgroundColor: 'rgba(255, 107, 53, 0.15)',
+            tension: 0.35,
+            fill: true,
+            pointBackgroundColor: '#FF6B35',
+            pointRadius: 4,
+            pointHoverRadius: 6,
         }]
-
     },
-
     options: {
-
         responsive: true,
-
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        },
         scales: {
-
             y: {
-
                 beginAtZero: true,
-
-                max: 100
-
+                max: 100,
+                grid: { color: 'rgba(255, 255, 255, 0.06)' },
+                ticks: { color: '#9A9890', callback: val => `${val}%` }
+            },
+            x: {
+                grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                ticks: { color: '#9A9890' }
             }
-
         }
-
     }
-
 });
 
 const topicStats = JSON.parse(document.getElementById('topic-chart-data').textContent);
@@ -313,30 +239,30 @@ if (topicCanvas && topicStats.length) {
             datasets: [{
                 label: 'Accuracy',
                 data: topicStats.map(item => item.accuracy),
-                backgroundColor: topicStats.map(item => item.accuracy < 60 ? '#ca674e' : '#28745b'),
-                borderRadius: 4,
-                maxBarThickness: 42
+                backgroundColor: topicStats.map(item => item.accuracy < 60 ? '#FF5A5F' : (item.accuracy < 80 ? '#FFB703' : '#C6F432')),
+                borderRadius: 6,
+                maxBarThickness: 36
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                y: { beginAtZero: true, max: 100, ticks: { callback: value => `${value}%` } }
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: { color: 'rgba(255, 255, 255, 0.06)' },
+                    ticks: { color: '#9A9890', callback: value => `${value}%` }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#9A9890' }
+                }
             },
             plugins: { legend: { display: false } }
         }
     });
 }
-
 </script>
-
-<style>
-    .study-next-panel { padding: 25px 28px; border: 1px solid #eadbd3; border-left: 4px solid var(--coral); border-radius: 8px; background: #fbf6f2; color: var(--ink); }
-    .study-next-panel > div > div:first-child > p:first-child { color: var(--coral); }
-    .study-next-panel h3 { font-family: 'DM Sans', sans-serif; }
-    .topic-chart-wrap { position: relative; height: 280px; }
-    @media (max-width: 575.98px) { .study-next-panel { padding: 20px; } .topic-chart-wrap { height: 230px; } }
-</style>
 
 {% endblock %}

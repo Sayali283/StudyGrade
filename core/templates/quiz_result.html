@@ -1,148 +1,151 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 
-<div class="container">
+<div class="container py-3">
 
-    <div class="card-box text-center mb-5">
+    <!-- Score Hero Box with Circular Animated Ring -->
+    <div class="card-box result-hero-box mb-4 fade-up-item">
+        <span class="dashboard-eyebrow">
+            <i class="bi bi-award-fill"></i> Session Performance
+        </span>
+        <h1 class="h2 fw-bold text-primary mb-4">{{ quiz.subject }} Quiz Result</h1>
 
-        <h1 class="text-primary mb-4">
-            Quiz Result
-        </h1>
-
-        <div class="display-3 fw-bold text-success">
-
-            {{ quiz.score }}%
-
+        <!-- Circular SVG Score Ring -->
+        <div class="score-ring-wrap">
+            <svg class="score-ring-svg" viewBox="0 0 200 200">
+                <defs>
+                    <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="var(--ember-500)" />
+                        <stop offset="100%" stop-color="var(--lime-500)" />
+                    </linearGradient>
+                </defs>
+                <circle class="score-ring-circle-bg" cx="100" cy="100" r="90"></circle>
+                <circle class="score-ring-circle-fill" id="score-circle-fill" cx="100" cy="100" r="90" data-score="{{ quiz.score }}"></circle>
+            </svg>
+            <div class="score-center-text">
+                <div class="score-big-number" data-countup="{{ quiz.score }}%">{{ quiz.score }}%</div>
+                <span class="small text-secondary fw-bold text-uppercase" style="letter-spacing: 0.05em;">Final Score</span>
+            </div>
         </div>
 
-        <p class="text-muted mt-3">
-
-            Performance Summary
-
-        </p>
-
+        <div>
+            {% if quiz.score >= 80 %}
+                <span class="badge bg-success fs-6 px-3 py-2">
+                    <i class="bi bi-trophy-fill me-1"></i> Mastery Level: Exceptional!
+                </span>
+            {% elif quiz.score >= 50 %}
+                <span class="badge bg-warning fs-6 px-3 py-2">
+                    <i class="bi bi-star-half me-1"></i> Good Attempt — Keep Practicing!
+                </span>
+            {% else %}
+                <span class="badge bg-danger fs-6 px-3 py-2">
+                    <i class="bi bi-arrow-repeat me-1"></i> Review Recommended
+                </span>
+            {% endif %}
+        </div>
     </div>
 
-    <!-- Stats -->
-
-    <div class="row g-4 mb-5">
-
+    <!-- Quick Stats Grid -->
+    <div class="row g-4 mb-4">
         <div class="col-md-4">
-
-            <div class="card-box text-center">
-
-                <h5 class="text-secondary">
-                    Correct Answers
-                </h5>
-
-                <div class="stat-number text-success">
-
-                    {{ correct_count }}
-
+            <div class="stat-card lime-accent fade-up-item" style="--stat-accent: var(--lime-500);">
+                <div class="stat-icon">
+                    <i class="bi bi-check2-circle" aria-hidden="true"></i>
                 </div>
-
+                <div class="stat-label">Correct Answers</div>
+                <div class="stat-number text-success" data-countup="{{ correct_count }}">{{ correct_count }}</div>
             </div>
-
         </div>
 
         <div class="col-md-4">
-
-            <div class="card-box text-center">
-
-                <h5 class="text-secondary">
-                    Wrong Answers
-                </h5>
-
-                <div class="stat-number text-danger">
-
-                    {{ wrong_count }}
-
+            <div class="stat-card fade-up-item" style="--stat-accent: var(--color-danger);">
+                <div class="stat-icon" style="background: rgba(255, 90, 95, 0.12); color: var(--color-danger);">
+                    <i class="bi bi-x-circle" aria-hidden="true"></i>
                 </div>
-
+                <div class="stat-label">Wrong Answers</div>
+                <div class="stat-number text-danger" data-countup="{{ wrong_count }}">{{ wrong_count }}</div>
             </div>
-
         </div>
 
         <div class="col-md-4">
-
-            <div class="card-box text-center">
-
-                <h5 class="text-secondary">
-                    Total Questions
-                </h5>
-
-                <div class="stat-number text-primary">
-
-                    {{ total }}
-
+            <div class="stat-card fade-up-item" style="--stat-accent: var(--ember-500);">
+                <div class="stat-icon">
+                    <i class="bi bi-collection" aria-hidden="true"></i>
                 </div>
-
+                <div class="stat-label">Total Questions</div>
+                <div class="stat-number" data-countup="{{ total }}">{{ total }}</div>
             </div>
-
         </div>
-
     </div>
 
     <!-- Answers Review -->
-
-    <div class="card-box">
-
-        <h3 class="text-primary mb-4">
-
-            Answer Review
-
-        </h3>
-
-        {% for q in questions %}
-
-        <div class="border rounded p-3 mb-4">
-
-            <h5>
-
-                Q{{ forloop.counter }}.
-                {{ q.question_text }}
-
-            </h5>
-
-            <p class="mt-3">
-
-                <strong>
-                    Correct Answer:
-                </strong>
-
-                <span class="text-success">
-
-                    {{ q.correct_answer }}
-
-                </span>
-
-            </p>
-
+    <div class="card-box mb-4">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h3 class="h4 text-primary mb-0">
+                <i class="bi bi-journal-check me-2" style="color: var(--lime-500);"></i> Detailed Answer Breakdown
+            </h3>
+            <span class="badge bg-primary">Question Review</span>
         </div>
 
-        {% endfor %}
+        {% for q in questions %}
+        <div class="p-3 mb-3 rounded border {% if q.answer_record.is_correct %}border-success{% else %}border-danger{% endif %}" style="background: var(--bg-surface-2);">
+            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                <div>
+                    <span class="badge bg-secondary me-2">Q{{ forloop.counter }}</span>
+                    {% if q.topic %}
+                        <span class="badge bg-primary">{{ q.topic }}</span>
+                    {% endif %}
+                </div>
+                {% if q.answer_record.is_correct %}
+                    <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i> Correct (+1)</span>
+                {% else %}
+                    <span class="badge bg-danger"><i class="bi bi-x-circle-fill me-1" aria-hidden="true"></i> Needs Review</span>
+                {% endif %}
+            </div>
 
+            <h5 class="fw-bold text-primary mb-3 mt-1">
+                {{ q.question_text }}
+            </h5>
+
+            <div class="row g-2">
+                <div class="col-sm-6">
+                    <div class="p-2 rounded border border-subtle" style="background: var(--bg-surface-1);">
+                        <p class="mb-1 small text-muted"><strong>Your Answer:</strong></p>
+                        <p class="mb-0 {% if q.answer_record.is_correct %}text-success fw-bold{% else %}text-danger fw-bold{% endif %}">
+                            {% if q.answer_record.selected_answer %}
+                                {{ q.answer_record.selected_answer }}
+                            {% else %}
+                                <em class="text-muted">Not answered</em>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="p-2 rounded border border-subtle" style="background: var(--bg-surface-1);">
+                        <p class="mb-1 small text-muted"><strong>Correct Answer:</strong></p>
+                        <p class="mb-0 text-success fw-bold">
+                            {{ q.correct_answer }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
     </div>
 
-    <!-- Buttons -->
-
-    <div class="text-center mt-5">
-
-        <a href="/student/quiz/"
-        class="btn btn-primary btn-lg me-3">
-
-            Back To Quiz Center
-
+    <!-- Action Buttons -->
+    <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap mt-4">
+        <a href="{% url 'quiz_home' %}" class="btn btn-outline-dark">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Back To Quiz Center
         </a>
-
-        <a href="/student/dashboard/"
-        class="btn btn-success btn-lg">
-
-            Dashboard
-
+        <a href="{% url 'flashcard_home' %}" class="btn btn-outline-primary">
+            <i class="bi bi-stack me-1"></i> Review with Flashcards
         </a>
-
+        <a href="{% url 'student_dashboard' %}" class="btn btn-primary">
+            <i class="bi bi-grid-fill me-1" aria-hidden="true"></i> Return to Dashboard
+        </a>
     </div>
 
 </div>

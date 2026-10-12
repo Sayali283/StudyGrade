@@ -1,26 +1,32 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 
-<div class="container py-4">
+<div class="container py-3">
+    <div class="quiz-runner-wrap" id="quiz-runner">
 
-    <div class="quiz-shell">
+        <!-- Top Header & Breadcrumb -->
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div>
+                <a href="{% url 'quiz_home' %}" class="small text-secondary text-decoration-none">
+                    <i class="bi bi-arrow-left me-1"></i> Exit to Quiz Center
+                </a>
+                <h2 class="h3 fw-bold text-primary mt-1 mb-0">{{ quiz.subject }} Quiz</h2>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary fs-6">
+                    {{ questions|length }} Questions
+                </span>
+                <span class="badge bg-secondary" id="quiz-progress-text">
+                    Question 1 of {{ questions|length }}
+                </span>
+            </div>
+        </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
-
-            <h2 class="text-primary mb-3">
-
-                {{ quiz.subject }} Quiz
-
-            </h2>
-
-            <span class="badge bg-primary fs-6">
-
-                Total Questions:
-                {{ questions|length }}
-
-            </span>
-
+        <!-- Animated Progress Track -->
+        <div class="quiz-progress-track" id="quiz-progress-track">
+            <div class="quiz-progress-fill" id="quiz-progress-fill" style="width: {% if questions %}calc(100% / {{ questions|length }}){% else %}0%{% endif %};"></div>
         </div>
 
         {% if messages %}
@@ -30,159 +36,125 @@
         {% endif %}
 
         {% if questions %}
-
-        <form method="POST" action="{% url 'submit_quiz' quiz.id %}">
-
+        <form method="POST" action="{% url 'submit_quiz' quiz.id %}" id="quiz-active-form">
             {% csrf_token %}
 
             {% for q in questions %}
+            <div class="quiz-card-slide {% if forloop.first %}is-active{% endif %}" data-question-index="{{ forloop.counter0 }}">
+                <div class="card-box mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="stat-label mb-0">Question {{ forloop.counter }} of {{ questions|length }}</span>
+                        {% if q.topic %}
+                            <span class="badge bg-success"><i class="bi bi-tag-fill me-1"></i> {{ q.topic }}</span>
+                        {% endif %}
+                    </div>
 
-            <div class="card mb-4 border-0 shadow-sm">
-
-                <div class="card-body">
-
-                    <h5 class="mb-4">
-
-                        Q{{ forloop.counter }}.
+                    <h4 class="fw-bold text-primary mb-4" style="line-height: 1.4;">
                         {{ q.question_text }}
+                    </h4>
 
-                    </h5>
-
-                    <span class="badge text-bg-light mb-3">{{ q.topic }}</span>
-
-                    <!-- Option A -->
-
-                    <div class="form-check mb-3">
-
-                        <input
-                            class="form-check-input"
-                            type="radio"
-                            name="{{ q.id }}"
-                            id="q{{ q.id }}a"
-                            value="{{ q.option_a }}"
-                            required
-                        >
-
-                        <label
-                            class="form-check-label"
-                            for="q{{ q.id }}a"
-                        >
-
-                            {{ q.option_a }}
-
+                    <!-- Option Cards with Badges -->
+                    <div class="quiz-options-group">
+                        <!-- Option A -->
+                        <label class="quiz-option-card" for="q{{ q.id }}a">
+                            <span class="option-key-badge">1</span>
+                            <span class="flex-grow-1 text-primary">{{ q.option_a }}</span>
+                            <input
+                                class="form-check-input option-radio-hidden"
+                                type="radio"
+                                name="{{ q.id }}"
+                                id="q{{ q.id }}a"
+                                value="{{ q.option_a|escape }}"
+                            >
                         </label>
 
-                    </div>
-
-                    <!-- Option B -->
-
-                    <div class="form-check mb-3">
-
-                        <input
-                            class="form-check-input"
-                            type="radio"
-                            name="{{ q.id }}"
-                            id="q{{ q.id }}b"
-                            value="{{ q.option_b }}"
-                        >
-
-                        <label
-                            class="form-check-label"
-                            for="q{{ q.id }}b"
-                        >
-
-                            {{ q.option_b }}
-
+                        <!-- Option B -->
+                        <label class="quiz-option-card" for="q{{ q.id }}b">
+                            <span class="option-key-badge">2</span>
+                            <span class="flex-grow-1 text-primary">{{ q.option_b }}</span>
+                            <input
+                                class="form-check-input option-radio-hidden"
+                                type="radio"
+                                name="{{ q.id }}"
+                                id="q{{ q.id }}b"
+                                value="{{ q.option_b|escape }}"
+                            >
                         </label>
 
-                    </div>
-
-                    <!-- Option C -->
-
-                    <div class="form-check mb-3">
-
-                        <input
-                            class="form-check-input"
-                            type="radio"
-                            name="{{ q.id }}"
-                            id="q{{ q.id }}c"
-                            value="{{ q.option_c }}"
-                        >
-
-                        <label
-                            class="form-check-label"
-                            for="q{{ q.id }}c"
-                        >
-
-                            {{ q.option_c }}
-
+                        <!-- Option C -->
+                        <label class="quiz-option-card" for="q{{ q.id }}c">
+                            <span class="option-key-badge">3</span>
+                            <span class="flex-grow-1 text-primary">{{ q.option_c }}</span>
+                            <input
+                                class="form-check-input option-radio-hidden"
+                                type="radio"
+                                name="{{ q.id }}"
+                                id="q{{ q.id }}c"
+                                value="{{ q.option_c|escape }}"
+                            >
                         </label>
 
-                    </div>
-
-                    <!-- Option D -->
-
-                    <div class="form-check mb-2">
-
-                        <input
-                            class="form-check-input"
-                            type="radio"
-                            name="{{ q.id }}"
-                            id="q{{ q.id }}d"
-                            value="{{ q.option_d }}"
-                        >
-
-                        <label
-                            class="form-check-label"
-                            for="q{{ q.id }}d"
-                        >
-
-                            {{ q.option_d }}
-
+                        <!-- Option D -->
+                        <label class="quiz-option-card" for="q{{ q.id }}d">
+                            <span class="option-key-badge">4</span>
+                            <span class="flex-grow-1 text-primary">{{ q.option_d }}</span>
+                            <input
+                                class="form-check-input option-radio-hidden"
+                                type="radio"
+                                name="{{ q.id }}"
+                                id="q{{ q.id }}d"
+                                value="{{ q.option_d|escape }}"
+                            >
                         </label>
-
                     </div>
 
+                    <div class="d-flex align-items-center gap-2 mt-3 pt-3 border-top border-subtle small text-secondary">
+                        <i class="bi bi-keyboard"></i>
+                        <span>Press <kbd>1</kbd>-<kbd>4</kbd> to select, <kbd>→</kbd> or <kbd>Enter</kbd> for next</span>
+                    </div>
                 </div>
-
             </div>
-
             {% endfor %}
 
-            <button
-                type="submit"
-                class="btn btn-success btn-lg w-100"
-            >
-
-                Submit Quiz
-
-            </button>
-
+            <!-- Navigation Controls -->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <button type="button" class="btn btn-outline-dark" id="quiz-prev-btn" disabled>
+                    <i class="bi bi-arrow-left me-1"></i> Previous
+                </button>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-primary" id="quiz-next-btn">
+                        <span>Next Question</span> <i class="bi bi-arrow-right ms-1"></i>
+                    </button>
+                    <button type="submit" class="btn btn-success" id="quiz-submit-btn" style="display: none;">
+                        <i class="bi bi-check2-circle me-1"></i> Submit Quiz
+                    </button>
+                </div>
+            </div>
         </form>
 
         {% else %}
-
-        <div class="alert alert-warning text-center">
-
-            No questions available for this quiz.
-
-        </div>
-
-        <div class="text-center mt-3">
-
-            <a href="{% url 'quiz_home' %}"
-               class="btn btn-primary">
-
+        <div class="card-box text-center py-5">
+            <h4 class="text-primary mb-2">No questions available</h4>
+            <p class="text-secondary mb-4">No questions were found for this quiz session.</p>
+            <a href="{% url 'quiz_home' %}" class="btn btn-primary">
                 Back to Quiz Center
-
             </a>
-
         </div>
-
         {% endif %}
 
     </div>
-
 </div>
+
+<style>
+    kbd {
+        background: var(--bg-surface-3);
+        color: var(--text-primary);
+        padding: 2px 6px;
+        border-radius: 4px;
+        border: 1px solid var(--border-medium);
+        font-family: monospace;
+        font-size: 0.75rem;
+    }
+</style>
 
 {% endblock %}

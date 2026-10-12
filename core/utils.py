@@ -1,41 +1,19 @@
-from transformers import pipeline
+"""
+Utility functions for text formatting, dates, and response helpers.
+"""
+from django.utils import timezone
 
-# Load model once
-qg_model = pipeline("text2text-generation", model="iarfmoose/t5-base-question-generator")
 
-def ai_generate_questions(text, num_questions=5):
-    """
-    Fully smart question generator using T5 model.
-    Automatically creates:
-    - MCQs
-    - Options
-    - Correct answers
-    """
-    questions = []
+def format_duration(seconds: int) -> str:
+    """Formats an integer number of seconds into MM:SS format."""
+    minutes = seconds // 60
+    rem_seconds = seconds % 60
+    return f"{minutes:02d}:{rem_seconds:02d}"
 
-    # Generate questions
-    prompt = f"Generate {num_questions} exam style questions based on this content:\n{text}"
-    generated = qg_model(prompt, max_length=128, num_return_sequences=num_questions)
 
-    for item in generated:
-        question = item["generated_text"]
-
-        # Generate options
-        opt_prompt = f"Generate 4 multiple choice options for this question:\n{question}"
-        opt_raw = qg_model(opt_prompt, max_length=80, num_return_sequences=1)[0]["generated_text"]
-        options = [line.strip() for line in opt_raw.split("\n") if line.strip()]
-
-        if len(options) < 4:
-            options = ["Option A", "Option B", "Option C", "Option D"]
-
-        # Generate correct answer
-        ans_prompt = f"Give the correct answer to this question:\n{question}"
-        answer = qg_model(ans_prompt, max_length=50, num_return_sequences=1)[0]["generated_text"]
-
-        questions.append({
-            "question": question,
-            "options": options[:4],
-            "correct": answer
-        })
-
-    return questions
+def truncate_text(text: str, max_chars: int = 100) -> str:
+    """Truncates text cleanly at word boundaries."""
+    if len(text) <= max_chars:
+        return text
+    truncated = text[:max_chars].rsplit(" ", 1)[0]
+    return f"{truncated}..."

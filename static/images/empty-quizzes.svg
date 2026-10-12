@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 140" width="160" height="140" fill="none">
+  <defs>
+    <linearGradient id="quizGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2A2D35"/>
+      <stop offset="100%" stop-color="#1A1B1F"/>
+    </linearGradient>
+    <radialGradient id="quizGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF6B35" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#FF6B35" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="80" cy="70" r="55" fill="url(#quizGlow)"/>
+  <rect x="42" y="24" width="76" height="88" rx="10" fill="url(#quizGrad)" stroke="rgba(255,107,53,0.3)" stroke-width="1.5"/>
+  <!-- Checkbox items -->
+  <rect x="54" y="38" width="14" height="14" rx="4" fill="#202226" stroke="#FF6B35" stroke-width="1.5"/>
+  <path d="M57 45 L60 48 L65 42" stroke="#C6F432" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="74" y="42" width="34" height="4" rx="2" fill="#4B4E58"/>
+
+  <rect x="54" y="60" width="14" height="14" rx="4" fill="#202226" stroke="#3D404A" stroke-width="1.5"/>
+  <rect x="74" y="64" width="38" height="4" rx="2" fill="#4B4E58"/>
+
+  <rect x="54" y="82" width="14" height="14" rx="4" fill="#202226" stroke="#3D404A" stroke-width="1.5"/>
+  <rect x="74" y="86" width="28" height="4" rx="2" fill="#4B4E58"/>
+
+  <!-- Ember lightning/star -->
+  <circle cx="118" cy="36" r="3" fill="#C6F432"/>
+  <circle cx="38" cy="80" r="2" fill="#FF814F"/>
+</svg>

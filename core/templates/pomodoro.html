@@ -63,31 +63,31 @@
     .pomodoro-page { max-width: 1080px; margin-inline: auto; }
     .pomodoro-heading { margin-bottom: 25px; }
     .pomodoro-heading > p:last-child { margin-bottom: 0; }
-    .pomodoro-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr); gap: 20px; align-items: stretch; }
-    .timer-panel, .rhythm-panel { padding: clamp(20px, 4vw, 34px); border: 1px solid var(--line); border-radius: 8px; background: #fff; box-shadow: 0 8px 24px rgba(31, 56, 47, .045); }
+    .pomodoro-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr); gap: 24px; align-items: stretch; }
+    .timer-panel, .rhythm-panel { padding: clamp(20px, 4vw, 36px); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); background: var(--bg-surface-glass-card); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow-md); }
     .timer-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .timer-mode { color: var(--green-dark); font-size: 14px; font-weight: 700; }
-    .duration-picker { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 12px; font-weight: 700; }
-    .duration-picker .form-select { width: 105px; min-height: 36px; }
-    .timer-ring { display: grid; width: 270px; aspect-ratio: 1; place-items: center; margin: 30px auto; border-radius: 50%; background: conic-gradient(var(--green) calc(var(--timer-progress, 100) * 1%), #e6ece7 0); transition: background .3s ease; }
-    .timer-ring.is-break { background: conic-gradient(var(--coral) calc(var(--timer-progress, 100) * 1%), #f0e7e1 0); }
-    .timer-face { display: flex; width: 226px; aspect-ratio: 1; flex-direction: column; align-items: center; justify-content: center; border-radius: 50%; background: #fff; }
-    .timer-digits { color: var(--ink); font-size: 54px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
-    .timer-caption { margin-top: 11px; color: var(--muted); font-size: 12px; }
-    .timer-controls { display: flex; justify-content: center; gap: 10px; }
-    .timer-start { min-width: 150px; }
-    .timer-status { min-height: 24px; margin: 17px 0 0; color: var(--muted); font-size: 13px; text-align: center; }
+    .timer-mode { color: var(--ember-500); font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .duration-picker { display: flex; align-items: center; gap: 9px; color: var(--text-secondary); font-size: 12px; font-weight: 700; }
+    .duration-picker .form-select { width: 110px; min-height: 38px; }
+    .timer-ring { display: grid; width: 280px; aspect-ratio: 1; place-items: center; margin: 30px auto; border-radius: 50%; background: conic-gradient(var(--ember-500) calc(var(--timer-progress, 100) * 1%), var(--bg-surface-3) 0); box-shadow: 0 0 35px var(--ember-glow); transition: background .3s ease; }
+    .timer-ring.is-break { background: conic-gradient(var(--lime-500) calc(var(--timer-progress, 100) * 1%), var(--bg-surface-3) 0); box-shadow: 0 0 35px var(--lime-glow); }
+    .timer-face { display: flex; width: 236px; aspect-ratio: 1; flex-direction: column; align-items: center; justify-content: center; border-radius: 50%; background: var(--bg-surface-1); border: 1px solid var(--border-subtle); }
+    .timer-digits { color: var(--text-primary); font-family: var(--font-display); font-size: 56px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+    .timer-caption { margin-top: 10px; color: var(--text-muted); font-size: 12px; }
+    .timer-controls { display: flex; justify-content: center; gap: 12px; }
+    .timer-start { min-width: 160px; }
+    .timer-status { min-height: 24px; margin: 18px 0 0; color: var(--text-secondary); font-size: 13px; text-align: center; }
     .rhythm-panel { display: flex; flex-direction: column; }
-    .rhythm-label { margin-bottom: 7px; color: var(--coral); font-size: 11px; font-weight: 700; text-transform: uppercase; }
-    .rhythm-panel h2 { margin: 0; font-family: 'DM Serif Display', Georgia, serif; font-size: 31px; }
+    .rhythm-label { margin-bottom: 7px; color: var(--lime-500); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .rhythm-panel h2 { margin: 0; font-family: var(--font-display); font-size: 28px; }
     .rhythm-steps { display: grid; gap: 0; margin: 25px 0; padding: 0; list-style: none; }
-    .rhythm-steps li { display: flex; gap: 14px; padding: 15px 0; border-bottom: 1px solid var(--line); }
-    .rhythm-number { color: var(--coral); font-size: 12px; font-weight: 700; }
-    .rhythm-steps strong, .completed-count strong { display: block; color: var(--ink); font-size: 14px; }
-    .rhythm-steps small, .completed-count small { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
-    .completed-count { display: flex; align-items: center; gap: 12px; margin-top: auto; padding-top: 4px; }
-    .completed-icon { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 8px; background: var(--soft-green); color: var(--green); font-size: 18px; }
-    .rhythm-thought { margin: 23px 0 0; padding: 15px 16px; border-left: 3px solid var(--coral); background: #fbf6f2; color: var(--muted); font-family: 'DM Serif Display', Georgia, serif; font-size: 16px; line-height: 1.45; }
+    .rhythm-steps li { display: flex; gap: 14px; padding: 15px 0; border-bottom: 1px solid var(--border-subtle); }
+    .rhythm-number { color: var(--ember-500); font-size: 13px; font-weight: 700; font-family: var(--font-display); }
+    .rhythm-steps strong, .completed-count strong { display: block; color: var(--text-primary); font-size: 14px; }
+    .rhythm-steps small, .completed-count small { display: block; margin-top: 2px; color: var(--text-secondary); font-size: 12px; }
+    .completed-count { display: flex; align-items: center; gap: 12px; margin-top: auto; padding-top: 14px; }
+    .completed-icon { display: grid; width: 42px; height: 42px; place-items: center; border-radius: var(--radius-sm); background: rgba(198, 244, 50, 0.12); color: var(--lime-500); font-size: 20px; }
+    .rhythm-thought { margin: 24px 0 0; padding: 16px 18px; border-left: 3px solid var(--ember-500); border-radius: 4px; background: var(--bg-surface-2); color: var(--text-secondary); font-style: italic; font-size: 14px; line-height: 1.5; }
     @media (max-width: 760px) { .pomodoro-layout { grid-template-columns: 1fr; } }
     @media (max-width: 420px) { .timer-ring { width: 230px; } .timer-face { width: 190px; } .timer-digits { font-size: 46px; } .timer-controls { flex-wrap: wrap; } }
     @media (prefers-reduced-motion: reduce) { .timer-ring { transition: none; } }

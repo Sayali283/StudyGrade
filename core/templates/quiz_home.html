@@ -1,63 +1,59 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 
 <div class="container">
-
-    <h2 class="dashboard-title">
-        Quiz Center
-    </h2>
-
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'info' }}" role="status">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
-
-    <div class="card-box mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
-            <h3 class="h5 mb-1">Study with flashcards</h3>
-            <p class="text-secondary mb-0">Review key definitions and ideas from your uploaded notes.</p>
+            <span class="dashboard-eyebrow">
+                <i class="bi bi-patch-question-fill"></i> Interactive Mastery
+            </span>
+            <h2 class="dashboard-title mb-0">Quiz Center</h2>
         </div>
-        <a class="btn btn-primary" href="{% url 'flashcard_home' %}"><i class="bi bi-stack me-1" aria-hidden="true"></i> Open flashcards</a>
+        <a href="{% url 'student_dashboard' %}" class="btn btn-outline-dark">
+            <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
     </div>
 
-    <div class="row">
+    <!-- Banner for Flashcards & Quick Practice -->
+    <div class="card-box mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3" style="border-left: 4px solid var(--lime-500);">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-success"><i class="bi bi-stack me-1"></i> Spaced Repetition</span>
+                <h4 class="h5 mb-0">Study with interactive Flashcards</h4>
+            </div>
+            <p class="text-secondary mb-0">Review key concepts, definitions, and active recall cards synthesized directly from your notes.</p>
+        </div>
+        <a class="btn btn-success" href="{% url 'flashcard_home' %}">
+            <i class="bi bi-stack me-1" aria-hidden="true"></i> Open flashcards
+        </a>
+    </div>
 
-        <!-- Generate Quiz -->
-
-        <div class="col-md-6 mb-4">
-
-            <div class="card-box">
-
-                <h4 class="text-primary mb-4">
-                    Generate Quiz
-                </h4>
+    <div class="row g-4">
+        <!-- Generate Quiz Column -->
+        <div class="col-lg-6 mb-4">
+            <div class="card-box h-100">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h4 class="text-primary mb-0">
+                        <i class="bi bi-magic me-2" style="color: var(--ember-500);"></i> Generate New Quiz
+                    </h4>
+                    <span class="badge bg-primary">AI Generator</span>
+                </div>
 
                 {% if notes %}
-
-                    <div class="list-group">
-
+                    <div class="d-flex flex-column gap-3">
                         {% for note in notes %}
-
-                            <div class="list-group-item quiz-note-row">
-
+                            <div class="p-3 rounded border border-subtle bg-surface-2 quiz-note-row" style="background: var(--bg-surface-2);">
                                 <div>
-
-                                    <h6 class="mb-1">
-                                        {{ note.subject }}
-                                    </h6>
-
-                                    <small class="text-muted">
-                                        Uploaded Notes
-                                    </small>
-
+                                    <h6 class="mb-1 text-primary fw-bold">{{ note.subject }}</h6>
+                                    <small class="text-muted"><i class="bi bi-file-earmark-check me-1"></i> Document #{{ note.id }}</small>
                                 </div>
 
                                 <form method="post" action="{% url 'generate_quiz' note.id %}" class="quiz-generator-form">
                                     {% csrf_token %}
                                     <div class="quiz-count-picker">
-                                        <label for="quiz-count-{{ note.id }}" class="form-label small mb-1">Questions</label>
+                                        <label for="quiz-count-{{ note.id }}" class="form-label small mb-1 visually-hidden">Questions</label>
                                         <select id="quiz-count-{{ note.id }}" name="question_count" class="form-select form-select-sm">
                                             <option value="5" selected>5 questions</option>
                                             <option value="10">10 questions</option>
@@ -65,117 +61,126 @@
                                             <option value="30">30 questions</option>
                                         </select>
                                     </div>
-                                    <button type="submit" class="btn btn-primary btn-sm">Start quiz <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></button>
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <span>Start quiz</span> <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                                    </button>
                                 </form>
-
                             </div>
-
                         {% endfor %}
-
                     </div>
-
                 {% else %}
-
-                    <div class="alert alert-warning">
-
-                        Upload notes first to generate quizzes.
-
+                    <div class="text-center py-4">
+                        <img src="{% static 'images/empty-notes.svg' %}" alt="No notes" style="max-width: 120px; opacity: 0.8;" class="mb-3">
+                        <h6>No notes available</h6>
+                        <p class="text-secondary small mb-3">Upload your first study note to enable AI quiz synthesis.</p>
+                        <a href="{% url 'student_notes' %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-cloud-arrow-up me-1"></i> Upload Notes
+                        </a>
                     </div>
-
                 {% endif %}
-
             </div>
-
         </div>
 
-        <!-- Quiz History -->
-
-        <div class="col-md-6 mb-4">
-
-            <div class="card-box">
-
-                <h4 class="text-primary mb-4">
-                    Quiz History
-                </h4>
+        <!-- Quiz History Column -->
+        <div class="col-lg-6 mb-4">
+            <div class="card-box h-100">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h4 class="text-primary mb-0">
+                        <i class="bi bi-clock-history me-2" style="color: var(--lime-500);"></i> Quiz History
+                    </h4>
+                    <span class="badge bg-success">{{ quizzes|length }} Completed</span>
+                </div>
 
                 {% if quizzes %}
-
                     <div class="table-responsive">
-
-                        <table class="table table-hover">
-
+                        <table class="table table-hover align-middle">
                             <thead>
-
                                 <tr>
-
                                     <th>Subject</th>
                                     <th>Score</th>
                                     <th>Date</th>
-
+                                    <th class="text-end">Action</th>
                                 </tr>
-
                             </thead>
-
                             <tbody>
-
                                 {% for quiz in quizzes %}
-
                                 <tr>
-
                                     <td>
-                                        {{ quiz.subject }}
+                                        <span class="fw-bold text-primary">{{ quiz.subject }}</span>
                                     </td>
-
                                     <td>
-
-                                        <span class="badge bg-success">
-
+                                        <span class="badge {% if quiz.score >= 80 %}bg-success{% elif quiz.score >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
                                             {{ quiz.score }}%
-
                                         </span>
-
                                     </td>
-
                                     <td>
-                                        {{ quiz.date }}
+                                        <small class="text-secondary">{{ quiz.date|date:"M j, Y, g:i a" }}</small>
                                     </td>
-
+                                    <td class="text-end">
+                                        <a href="{% url 'view_quiz_result' quiz.id %}" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-eye me-1" aria-hidden="true"></i> Review
+                                        </a>
+                                    </td>
                                 </tr>
-
                                 {% endfor %}
-
                             </tbody>
-
                         </table>
-
                     </div>
-
                 {% else %}
-
-                    <div class="alert alert-info">
-
-                        No quizzes attempted yet.
-
+                    <div class="text-center py-4">
+                        <img src="{% static 'images/empty-quizzes.svg' %}" alt="No quizzes" style="max-width: 120px; opacity: 0.8;" class="mb-3">
+                        <h6>No quiz attempts yet</h6>
+                        <p class="text-secondary small">Pick a note on the left and select question count to take your first quiz.</p>
                     </div>
-
                 {% endif %}
-
             </div>
-
         </div>
-
     </div>
+</div>
 
+<!-- AI Generation Loading Overlay -->
+<div id="quiz-generating-overlay" class="quiz-generating-overlay">
+    <div class="quiz-spinner"></div>
+    <h3 class="text-primary fw-bold mb-2">Generating Smart Quiz</h3>
+    <p class="text-secondary max-w-sm mb-0">Analyzing note contents, extracting critical concepts, and formulating active recall questions...</p>
 </div>
 
 <style>
-    .quiz-note-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
-    .quiz-generator-form { display: flex; flex-wrap: wrap; align-items: end; gap: 9px; }
-    .quiz-count-picker { width: 142px; }
-    .quiz-generator-form .form-select { min-height: 38px; }
+    .quiz-note-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        transition: transform var(--transition-fast), border-color var(--transition-fast);
+    }
+    .quiz-note-row:hover {
+        border-color: var(--border-medium) !important;
+        transform: translateX(3px);
+    }
+    .quiz-generator-form {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+    .quiz-count-picker {
+        width: 135px;
+    }
+    .quiz-generator-form .form-select {
+        min-height: 36px;
+        font-size: 0.85rem;
+    }
     @media (max-width: 575.98px) {
-        .quiz-generator-form { width: 100%; }
-        .quiz-generator-form .btn { flex: 1; }
+        .quiz-generator-form {
+            width: 100%;
+        }
+        .quiz-generator-form .quiz-count-picker {
+            flex: 1;
+        }
+        .quiz-generator-form .btn {
+            flex: 1;
+        }
     }
 </style>
 

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 140" width="160" height="140" fill="none">
+  <defs>
+    <linearGradient id="noteGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2A2D35"/>
+      <stop offset="100%" stop-color="#1A1B1F"/>
+    </linearGradient>
+    <linearGradient id="emberLine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF6B35"/>
+      <stop offset="100%" stop-color="#FFA26B"/>
+    </linearGradient>
+    <radialGradient id="emberGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF6B35" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#FF6B35" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Ambient Glow -->
+  <circle cx="80" cy="70" r="55" fill="url(#emberGlow)"/>
+  <!-- Folded Page Back -->
+  <rect x="42" y="32" width="68" height="82" rx="8" fill="#141518" stroke="#292C32" stroke-width="1.5" transform="rotate(-6 76 73)"/>
+  <!-- Folded Page Front -->
+  <rect x="48" y="24" width="68" height="84" rx="8" fill="url(#noteGrad)" stroke="rgba(255,107,53,0.35)" stroke-width="1.5"/>
+  <!-- Content Lines -->
+  <rect x="60" y="38" width="44" height="4" rx="2" fill="url(#emberLine)"/>
+  <rect x="60" y="48" width="34" height="3" rx="1.5" fill="#3D404A"/>
+  <rect x="60" y="56" width="40" height="3" rx="1.5" fill="#3D404A"/>
+  <rect x="60" y="64" width="28" height="3" rx="1.5" fill="#3D404A"/>
+  <!-- Plus Badge -->
+  <circle cx="106" cy="94" r="14" fill="#FF6B35"/>
+  <path d="M106 88 V100 M100 94 H112" stroke="#0E0F11" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Lime spark -->
+  <circle cx="44" cy="40" r="2.5" fill="#C6F432"/>
+  <circle cx="118" cy="30" r="2" fill="#FFA26B"/>
+</svg>

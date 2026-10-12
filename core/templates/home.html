@@ -5,117 +5,416 @@
 
 <style>
     .home-hero {
-      display: grid;
-      grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
-      align-items: center;
-      gap: clamp(36px, 6vw, 88px);
-      padding: 30px 0 56px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+        align-items: center;
+        gap: clamp(32px, 5vw, 64px);
+        padding: 40px 0 68px;
     }
 
-    .home-copy { animation: arrive .55s ease-out both; }
-    .home-eyebrow, .preview-label {
-      margin: 0 0 16px;
-      color: var(--green);
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
+    .home-copy {
+        animation: fadeInHero 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
 
-    .home-title { max-width: 570px; margin: 0; font-size: 76px; line-height: 1.02; }
-    .home-title em { color: var(--coral); font-style: normal; }
-    .home-description { max-width: 470px; margin: 24px 0 27px; color: var(--muted); font-size: 17px; line-height: 1.75; }
-    .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
-    .hero-actions .btn { min-height: 48px; padding: 12px 19px; }
-    .hero-secondary { border: 1px solid #c9d5cd; background: transparent; color: var(--ink); }
-    .hero-secondary:hover { border-color: var(--green); background: var(--soft-green); color: var(--green-dark); }
-    .home-note { display: flex; align-items: center; gap: 9px; margin-top: 30px; color: var(--muted); font-size: 13px; }
-    .home-note i { color: var(--green); font-size: 16px; }
-    .home-preview {
-      padding: 14px;
-      border: 1px solid #dce5de;
-      border-radius: 8px;
-      background: #fff;
-      box-shadow: 0 20px 55px rgba(31, 56, 47, .10);
-      animation: arrive .65s .12s ease-out both;
+    .home-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: var(--radius-pill);
+        background: rgba(198, 244, 50, 0.1);
+        border: 1px solid rgba(198, 244, 50, 0.3);
+        color: var(--lime-500);
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 20px;
     }
 
-    .preview-top, .preview-bottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 5px 12px; color: var(--muted); font-size: 11px; font-weight: 700; }
-    .preview-label { margin: 0; }
-    .preview-window { overflow: hidden; border: 1px solid var(--line); border-radius: 5px; background: var(--canvas); }
-    .preview-window img { display: block; width: 100%; height: auto; }
-    .preview-bottom { padding: 12px 5px 2px; font-weight: 500; }
-    .preview-bottom i { color: var(--coral); }
-    .parent-link { margin: 23px 0 0; color: var(--muted); font-size: 13px; }
-    .parent-link a { color: var(--green-dark); font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: 3px; }
-    .feature-band { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; padding: 27px 0 4px; border-top: 1px solid var(--line); }
-    .feature-item { display: flex; align-items: flex-start; gap: 14px; }
-    .feature-icon { display: grid; flex: 0 0 42px; width: 42px; height: 42px; place-items: center; border-radius: 8px; background: var(--soft-green); color: var(--green); font-size: 19px; }
-    .feature-item:nth-child(2) .feature-icon { background: #f8eee9; color: var(--coral); }
-    .feature-item:nth-child(3) .feature-icon { background: #eaf1f4; color: var(--sky); }
-    .feature-item h2 { margin: 1px 0 4px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; }
-    .feature-item p { margin: 0; color: var(--muted); font-size: 13px; }
+    .home-eyebrow i {
+        font-size: 0.9rem;
+    }
 
-    @keyframes arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-    @media (max-width: 850px) {
-      .home-hero { grid-template-columns: 1fr; gap: 34px; padding-top: 16px; }
-      .home-title { max-width: 680px; font-size: 62px; }
-      .home-description { max-width: 600px; }
-      .home-preview { max-width: 680px; }
+    .home-title {
+        font-family: var(--font-display);
+        font-size: clamp(2.75rem, 5.5vw, 4.4rem);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.06;
+        margin: 0;
+        color: var(--text-primary);
     }
-    @media (max-width: 575.98px) {
-      .home-hero { gap: 28px; padding-bottom: 34px; }
-      .home-title { font-size: 48px; }
-      .home-description { margin: 17px 0 22px; font-size: 15px; }
-      .home-preview { padding: 9px; }
-      .preview-top, .preview-bottom { font-size: 10px; }
-      .feature-band { grid-template-columns: 1fr; gap: 18px; }
+
+    .home-title em {
+        background: linear-gradient(135deg, var(--ember-400), var(--ember-600));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-style: normal;
     }
-    @media (prefers-reduced-motion: reduce) { .home-copy, .home-preview { animation: none; } }
+
+    .home-description {
+        font-size: 1.15rem;
+        color: var(--text-secondary);
+        line-height: 1.65;
+        margin: 22px 0 32px;
+        max-width: 520px;
+    }
+
+    .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .home-note {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 28px;
+        color: var(--text-muted);
+        font-size: 0.88rem;
+    }
+
+    .home-note i {
+        color: var(--lime-500);
+        font-size: 1rem;
+    }
+
+    .parent-link {
+        margin: 18px 0 0;
+        font-size: 0.88rem;
+        color: var(--text-muted);
+    }
+
+    .parent-link a {
+        color: var(--ember-500);
+        font-weight: 600;
+    }
+
+    /* Preview Glass Showcase */
+    .home-preview-wrapper {
+        position: relative;
+        animation: fadeInHero 0.8s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .home-preview-card {
+        background: var(--bg-surface-glass-card);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--radius-xl);
+        padding: 16px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), 0 0 30px var(--ember-glow);
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.4s ease, border-color 0.4s ease;
+    }
+
+    .home-preview-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--border-ember);
+    }
+
+    .preview-window-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 10px 14px;
+    }
+
+    .preview-dots {
+        display: flex;
+        gap: 6px;
+    }
+
+    .preview-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--border-strong);
+    }
+
+    .preview-dot:nth-child(1) { background: #FF5A5F; }
+    .preview-dot:nth-child(2) { background: #FFB703; }
+    .preview-dot:nth-child(3) { background: #C6F432; }
+
+    .preview-window-bar span {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .preview-window-frame {
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        border: 1px solid var(--border-subtle);
+        background: var(--bg-surface-1);
+    }
+
+    .preview-window-frame img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    .preview-bottom-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-top: 14px;
+        padding: 4px 6px;
+    }
+
+    .preview-stat-chip {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        background: var(--bg-surface-2);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .preview-stat-chip i {
+        color: var(--ember-500);
+        font-size: 1.1rem;
+    }
+
+    /* Floating Feature Badge */
+    .floating-streak-badge {
+        position: absolute;
+        bottom: -16px;
+        right: -12px;
+        background: var(--bg-surface-1);
+        border: 1px solid var(--border-ember);
+        border-radius: var(--radius-lg);
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45), 0 0 25px var(--ember-glow);
+        z-index: 3;
+        animation: floatBadge 4s ease-in-out infinite;
+    }
+
+    @keyframes floatBadge {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+    }
+
+    .floating-streak-flame {
+        font-size: 1.8rem;
+        color: var(--ember-500);
+    }
+
+    .floating-streak-text h6 {
+        margin: 0;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+    }
+
+    .floating-streak-text p {
+        margin: 2px 0 0;
+        font-family: var(--font-display);
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    /* Features Section */
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        margin-top: 32px;
+        padding-top: 36px;
+        border-top: 1px solid var(--border-subtle);
+    }
+
+    .feature-card {
+        background: var(--bg-surface-1);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        padding: 26px;
+        transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--border-medium);
+        box-shadow: var(--shadow-md);
+    }
+
+    .feature-card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        margin-bottom: 18px;
+    }
+
+    .icon-ember { background: rgba(255, 107, 53, 0.12); color: var(--ember-500); }
+    .icon-lime { background: rgba(198, 244, 50, 0.12); color: var(--lime-500); }
+    .icon-cyan { background: rgba(71, 123, 145, 0.16); color: #5bc0be; }
+
+    .feature-card h3 {
+        font-size: 1.15rem;
+        margin: 0 0 8px;
+        color: var(--text-primary);
+    }
+
+    .feature-card p {
+        margin: 0;
+        font-size: 0.92rem;
+        color: var(--text-secondary);
+        line-height: 1.55;
+    }
+
+    @keyframes fadeInHero {
+        from { opacity: 0; transform: translateY(18px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 991.98px) {
+        .home-hero {
+            grid-template-columns: 1fr;
+            padding: 20px 0 40px;
+        }
+        .features-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        .floating-streak-badge {
+            position: static;
+            margin-top: 16px;
+            animation: none;
+        }
+    }
 </style>
 
 <section class="home-hero" aria-labelledby="home-title">
     <div class="home-copy">
-        <p class="home-eyebrow">A calmer way to keep learning</p>
-        <h1 id="home-title" class="home-title">Make every study session <em>count.</em></h1>
-        <p class="home-description">Turn your notes into focused quizzes, see how you’re improving, and keep your learning on track.</p>
+        <span class="home-eyebrow">
+            <i class="bi bi-stars" aria-hidden="true"></i> Intelligent Learning & Mastery
+        </span>
+        <h1 id="home-title" class="home-title">
+            Make every study session <em>count.</em>
+        </h1>
+        <p class="home-description">
+            Turn your class notes and PDFs into AI-powered active recall quizzes, interactive flashcards, and measurable progress you can celebrate.
+        </p>
+        
         <div class="hero-actions">
-          {% if user.is_authenticated %}
-            {% if user.student %}
-              <a href="{% url 'student_dashboard' %}" class="btn btn-primary">Open your dashboard <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
-              <a href="{% url 'quiz_home' %}" class="btn hero-secondary">Go to quiz center</a>
-            {% elif user.parent %}
-              <a href="{% url 'parent_dashboard' %}" class="btn btn-primary">View student progress <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+            {% if user.is_authenticated %}
+                {% if user.student %}
+                    <a href="{% url 'student_dashboard' %}" class="btn btn-primary">
+                        Open your dashboard <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                    </a>
+                    <a href="{% url 'quiz_home' %}" class="btn btn-outline-dark">
+                        <i class="bi bi-patch-question me-1" aria-hidden="true"></i> Go to quiz center
+                    </a>
+                {% elif user.parent %}
+                    <a href="{% url 'parent_dashboard' %}" class="btn btn-primary">
+                        View student progress <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'student_signup' %}" class="btn btn-primary">
+                    Start learning free <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                </a>
+                <a href="{% url 'login' %}" class="btn btn-outline-dark">
+                    <i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i> Log in
+                </a>
             {% endif %}
-          {% else %}
-            <a href="{% url 'student_signup' %}" class="btn btn-primary">Start learning <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
-            <a href="{% url 'login' %}" class="btn hero-secondary">I have an account</a>
-          {% endif %}
         </div>
-        <p class="home-note"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Notes, quizzes, and progress in one place</p>
+
+        <p class="home-note">
+            <i class="bi bi-check-circle-fill" aria-hidden="true"></i> Instant quiz synthesis • Spaced flashcards • Pomodoro streaks
+        </p>
+
         {% if not user.is_authenticated %}
-          <p class="parent-link">Following a student? <a href="{% url 'parent_signup' %}">Create a parent account</a></p>
+            <p class="parent-link">
+                Tracking your student's progress? <a href="{% url 'parent_signup' %}">Create a parent account <i class="bi bi-arrow-up-right small"></i></a>
+            </p>
         {% endif %}
     </div>
 
-    <div class="home-preview" aria-label="Preview of the Study Guard student dashboard">
-        <div class="preview-top"><span class="preview-label">Your study space</span><span>Progress at a glance</span></div>
-        <div class="preview-window"><img src="{% static 'dashboard.png' %}" alt="Study Guard dashboard showing learning statistics and study actions"></div>
-        <div class="preview-bottom"><span><i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i>Notes become practice</span><span><i class="bi bi-graph-up-arrow me-1" aria-hidden="true"></i>Progress you can follow</span></div>
+    <div class="home-preview-wrapper" aria-label="Interactive preview of Study Guard">
+        <div class="home-preview-card">
+            <div class="preview-window-bar">
+                <div class="preview-dots">
+                    <span class="preview-dot"></span>
+                    <span class="preview-dot"></span>
+                    <span class="preview-dot"></span>
+                </div>
+                <span>Study Guard Live Studio</span>
+                <span class="badge bg-success"><i class="bi bi-lightning-charge-fill me-1"></i> Active</span>
+            </div>
+            
+            <div class="preview-window-frame">
+                <img src="{% static 'images/study-bg.jpg' %}" alt="Study Guard Studio with illuminated notebooks, desk lamp, and library backdrop">
+            </div>
+
+            <div class="preview-bottom-stats">
+                <div class="preview-stat-chip">
+                    <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+                    <span>Notes become active practice</span>
+                </div>
+                <div class="preview-stat-chip">
+                    <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>
+                    <span>Real-time accuracy analytics</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Live Streak Badge -->
+        <aside class="floating-streak-badge" aria-label="Live study streak badge">
+            <span class="floating-streak-flame"><i class="bi bi-fire" aria-hidden="true"></i></span>
+            <div class="floating-streak-text">
+                <h6>Study Streak</h6>
+                <p>7 Days Active 🔥</p>
+            </div>
+        </aside>
     </div>
 </section>
 
-<section class="feature-band" aria-label="Study Guard tools">
-    <article class="feature-item">
-        <span class="feature-icon"><i class="bi bi-file-earmark-arrow-up" aria-hidden="true"></i></span>
-        <div><h2>Bring your notes</h2><p>Keep your study PDFs together.</p></div>
+<!-- Feature Grid -->
+<section class="features-grid" aria-label="Key Study Guard features">
+    <article class="feature-card fade-up-item">
+        <div class="feature-card-icon icon-ember">
+            <i class="bi bi-file-earmark-arrow-up" aria-hidden="true"></i>
+        </div>
+        <h3>Bring Your Notes</h3>
+        <p>Drop your PDFs, DOCX, or Markdown files. Study Guard parses key topics and extracts critical insights seamlessly.</p>
     </article>
-    <article class="feature-item">
-        <span class="feature-icon"><i class="bi bi-ui-checks-grid" aria-hidden="true"></i></span>
-        <div><h2>Practice with quizzes</h2><p>Review what you’ve learned.</p></div>
+
+    <article class="feature-card fade-up-item">
+        <div class="feature-card-icon icon-lime">
+            <i class="bi bi-ui-checks-grid" aria-hidden="true"></i>
+        </div>
+        <h3>AI-Generated Practice</h3>
+        <p>Generate 5 to 30 custom multiple-choice questions per note instantly to test deep understanding, not just rote memorization.</p>
     </article>
-    <article class="feature-item">
-        <span class="feature-icon"><i class="bi bi-bar-chart-line" aria-hidden="true"></i></span>
-        <div><h2>Notice your progress</h2><p>Track scores over time.</p></div>
+
+    <article class="feature-card fade-up-item">
+        <div class="feature-card-icon icon-cyan">
+            <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+        </div>
+        <h3>Track True Mastery</h3>
+        <p>Monitor your accuracy curves, weak topics, and daily focus blocks with clean dashboards for students and parents.</p>
     </article>
 </section>
 

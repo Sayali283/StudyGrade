@@ -21,7 +21,12 @@
         <section class="study-panel" aria-label="Flashcard study session">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <span class="small fw-bold text-secondary" id="card-position" aria-live="polite"></span>
-                <button class="btn btn-sm btn-outline-dark" id="shuffle-cards" type="button" title="Shuffle cards"><i class="bi bi-shuffle me-1" aria-hidden="true"></i> Shuffle</button>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-dark border" id="mastery-tracker">
+                        <i class="bi bi-award text-success me-1" aria-hidden="true"></i> <span id="mastered-count">0</span> / <span id="total-count">0</span> Mastered
+                    </span>
+                    <button class="btn btn-sm btn-outline-dark" id="shuffle-cards" type="button" title="Shuffle cards"><i class="bi bi-shuffle me-1" aria-hidden="true"></i> Shuffle</button>
+                </div>
             </div>
             <div class="progress flashcard-progress" role="progressbar" aria-label="Study session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                 <div class="progress-bar" id="card-progress"></div>
@@ -32,22 +37,34 @@
                     <span class="flashcard-face flashcard-front">
                         <span class="flashcard-side-label"><i class="bi bi-lightbulb me-1" aria-hidden="true"></i> Question</span>
                         <span class="flashcard-copy" id="flashcard-front"></span>
-                        <span class="flashcard-hint">Select the card to reveal the answer</span>
+                        <span class="flashcard-hint">Select the card or press Space to reveal answer</span>
                     </span>
                     <span class="flashcard-face flashcard-back">
                         <span class="flashcard-side-label"><i class="bi bi-check2-circle me-1" aria-hidden="true"></i> Key point</span>
                         <span class="flashcard-copy" id="flashcard-back"></span>
-                        <span class="flashcard-hint">Select the card to return to the question</span>
+                        <span class="flashcard-hint">Select to flip back</span>
                     </span>
                 </span>
             </button>
 
-            <div class="d-flex justify-content-center align-items-center gap-3 mt-4">
-                <button class="btn btn-outline-dark" id="previous-card" type="button" aria-label="Previous card"><i class="bi bi-arrow-left" aria-hidden="true"></i><span class="d-none d-sm-inline ms-2">Previous</span></button>
-                <button class="btn btn-primary" id="flip-card" type="button"><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i> Flip card</button>
-                <button class="btn btn-outline-dark" id="next-card" type="button" aria-label="Next card"><span class="d-none d-sm-inline me-2">Next</span><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+            <!-- Rating Controls -->
+            <div class="d-flex justify-content-center align-items-center gap-3 mt-4" id="rating-controls">
+                <button class="btn btn-outline-danger" id="rate-learning" type="button" title="Need to practice this more">
+                    <i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i> Still Learning
+                </button>
+                <button class="btn btn-primary" id="flip-card" type="button">
+                    <i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i> Flip card (Space)
+                </button>
+                <button class="btn btn-success" id="rate-mastered" type="button" title="I have memorized this">
+                    <i class="bi bi-check2-circle me-1" aria-hidden="true"></i> Mastered ✓
+                </button>
             </div>
-            <p class="text-center text-secondary small mt-3 mb-0">Use the left and right arrow keys to move between cards.</p>
+
+            <div class="d-flex justify-content-center align-items-center gap-2 mt-3">
+                <button class="btn btn-outline-dark btn-sm" id="previous-card" type="button" aria-label="Previous card"><i class="bi bi-arrow-left me-1"></i> Prev</button>
+                <button class="btn btn-outline-dark btn-sm" id="next-card" type="button" aria-label="Next card">Next <i class="bi bi-arrow-right ms-1"></i></button>
+            </div>
+            <p class="text-center text-secondary small mt-2 mb-0">Keyboard: [Space] Flip, [← / →] Move cards, [1] Still Learning, [2] Mastered.</p>
             <div class="text-center mt-4">
                 <form method="post" action="{% url 'complete_flashcard_session' note.id %}">
                     {% csrf_token %}
@@ -72,24 +89,24 @@
 
 <style>
     .flashcard-study { max-width: 820px; margin-inline: auto; }
-    .flashcard-count-badge { padding: 8px 12px; border: 1px solid var(--line); border-radius: 5px; background: #fff; color: var(--muted); font-size: 13px; font-weight: 700; }
-    .study-panel { padding: clamp(18px, 4vw, 34px); border: 1px solid var(--line); border-radius: 8px; background: #fff; box-shadow: 0 8px 24px rgba(31, 56, 47, .045); }
-    .flashcard-progress { height: 5px; border-radius: 5px; background: var(--soft-green); }
-    .flashcard-progress .progress-bar { background: var(--green); transition: width .25s ease; }
-    .flashcard-stage { display: block; width: 100%; min-height: 320px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--ink); perspective: 1200px; text-align: left; }
-    .flashcard-stage:focus-visible { outline: 3px solid rgba(40, 116, 91, .35); outline-offset: 4px; }
-    .flashcard-inner { position: relative; display: block; min-height: 320px; transform-style: preserve-3d; transition: transform .45s ease; }
+    .flashcard-count-badge { padding: 8px 14px; border: 1px solid var(--border-medium); border-radius: var(--radius-pill); background: var(--bg-surface-2); color: var(--text-secondary); font-size: 13px; font-weight: 700; }
+    .study-panel { padding: clamp(20px, 4vw, 36px); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); background: var(--bg-surface-glass-card); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow-md); }
+    .flashcard-progress { height: 6px; border-radius: var(--radius-pill); background: var(--bg-surface-3); }
+    .flashcard-progress .progress-bar { background: linear-gradient(90deg, var(--ember-500), var(--lime-500)); transition: width .3s ease; }
+    .flashcard-stage { display: block; width: 100%; min-height: 330px; padding: 0; border: 0; border-radius: var(--radius-lg); background: transparent; color: var(--text-primary); perspective: 1200px; text-align: left; }
+    .flashcard-stage:focus-visible { outline: 3px solid var(--ember-500); outline-offset: 4px; }
+    .flashcard-inner { position: relative; display: block; min-height: 330px; transform-style: preserve-3d; transition: transform .45s ease; }
     .flashcard-stage.is-flipped .flashcard-inner { transform: rotateY(180deg); }
-    .flashcard-face { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; min-height: 320px; padding: clamp(22px, 5vw, 52px); border: 1px solid #dce7df; border-radius: 8px; backface-visibility: hidden; }
-    .flashcard-front { background: #f6f9f6; }
-    .flashcard-back { transform: rotateY(180deg); border-color: #eadbd3; background: #fbf6f2; }
-    .flashcard-side-label { margin-bottom: 18px; color: var(--green); font-size: 12px; font-weight: 700; text-transform: uppercase; }
-    .flashcard-back .flashcard-side-label { color: var(--coral); }
-    .flashcard-copy { max-height: 190px; overflow-y: auto; font-family: 'DM Serif Display', Georgia, serif; font-size: 27px; line-height: 1.35; }
-    .flashcard-hint { margin-top: 22px; color: var(--muted); font-size: 12px; }
+    .flashcard-face { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; min-height: 330px; padding: clamp(24px, 5vw, 54px); border: 1px solid var(--border-medium); border-radius: var(--radius-lg); backface-visibility: hidden; box-shadow: var(--shadow-sm); }
+    .flashcard-front { background: var(--bg-surface-2); }
+    .flashcard-back { transform: rotateY(180deg); border-color: var(--border-ember); background: var(--bg-surface-3); }
+    .flashcard-side-label { margin-bottom: 18px; color: var(--lime-500); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .flashcard-back .flashcard-side-label { color: var(--ember-500); }
+    .flashcard-copy { max-height: 190px; overflow-y: auto; font-family: var(--font-display); font-size: clamp(1.4rem, 2.5vw, 1.85rem); font-weight: 600; line-height: 1.35; color: var(--text-primary); }
+    .flashcard-hint { margin-top: 22px; color: var(--text-muted); font-size: 12px; }
     @media (max-width: 575.98px) {
         .flashcard-stage, .flashcard-inner, .flashcard-face { min-height: 290px; }
-        .flashcard-copy { font-size: 22px; }
+        .flashcard-copy { font-size: 1.25rem; }
         .study-panel { padding: 16px; }
     }
     @media (prefers-reduced-motion: reduce) { .flashcard-inner, .flashcard-progress .progress-bar { transition: none; } }
@@ -106,14 +123,23 @@
         const progress = document.getElementById('card-progress');
         const progressTrack = progress.parentElement;
         const completeSession = document.getElementById('complete-session');
+        const masteredCountEl = document.getElementById('mastered-count');
+        const totalCountEl = document.getElementById('total-count');
         let currentIndex = 0;
-        let deck = cards.map((card, index) => ({ ...card, originalIndex: index }));
+        let deck = cards.map((card, index) => ({ ...card, originalIndex: index, mastered: false }));
+
+        totalCountEl.textContent = deck.length;
+
+        function updateMasteryUI() {
+            const masteredCount = deck.filter(c => c.mastered).length;
+            masteredCountEl.textContent = masteredCount;
+        }
 
         function renderCard() {
             const card = deck[currentIndex];
             front.textContent = card.front;
             back.textContent = card.back;
-            position.textContent = `Card ${currentIndex + 1} of ${deck.length}`;
+            position.textContent = `Card ${currentIndex + 1} of ${deck.length}${card.mastered ? ' (Mastered ✓)' : ''}`;
             const completion = Math.round(((currentIndex + 1) / deck.length) * 100);
             progress.style.width = `${completion}%`;
             progressTrack.setAttribute('aria-valuenow', completion);
@@ -122,6 +148,7 @@
             stage.setAttribute('aria-label', `Card ${currentIndex + 1} of ${deck.length}. Show answer.`);
             document.getElementById('previous-card').disabled = currentIndex === 0;
             document.getElementById('next-card').disabled = currentIndex === deck.length - 1;
+            updateMasteryUI();
         }
 
         function flipCard() {
@@ -131,8 +158,23 @@
             if (flipped) completeSession.disabled = false;
         }
 
+        function rateCurrentCard(isMastered) {
+            deck[currentIndex].mastered = isMastered;
+            completeSession.disabled = false;
+            updateMasteryUI();
+            if (currentIndex < deck.length - 1) {
+                currentIndex += 1;
+                renderCard();
+            } else {
+                renderCard();
+            }
+        }
+
         stage.addEventListener('click', flipCard);
         document.getElementById('flip-card').addEventListener('click', flipCard);
+        document.getElementById('rate-learning').addEventListener('click', () => rateCurrentCard(false));
+        document.getElementById('rate-mastered').addEventListener('click', () => rateCurrentCard(true));
+
         document.getElementById('previous-card').addEventListener('click', () => {
             if (currentIndex > 0) { currentIndex -= 1; renderCard(); }
         });
@@ -149,7 +191,12 @@
         });
         document.addEventListener('keydown', (event) => {
             if (event.altKey || event.ctrlKey || event.metaKey) return;
-            if (event.key === 'ArrowLeft' && currentIndex > 0) {
+            if (event.target && ['input', 'textarea', 'select'].includes(event.target.tagName.toLowerCase())) return;
+
+            if (event.code === 'Space') {
+                event.preventDefault();
+                flipCard();
+            } else if (event.key === 'ArrowLeft' && currentIndex > 0) {
                 event.preventDefault();
                 currentIndex -= 1;
                 renderCard();
@@ -157,6 +204,12 @@
                 event.preventDefault();
                 currentIndex += 1;
                 renderCard();
+            } else if (event.key === '1') {
+                event.preventDefault();
+                rateCurrentCard(false);
+            } else if (event.key === '2') {
+                event.preventDefault();
+                rateCurrentCard(true);
             }
         });
 

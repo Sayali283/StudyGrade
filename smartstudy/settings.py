@@ -26,16 +26,27 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-CSRF_COOKIE_SECURE = not DEBUG
-SESSION_COOKIE_SECURE = not DEBUG
-ALLOWED_HOSTS = [
-    'study-guard-1.onrender.com',
-    'localhost',
-    '127.0.0.1',
-    '0.0.0.0',
-    '[::1]',
-]
+DEBUG = config('DEBUG', default=True, cast=bool)
+
+# SSL & Security headers
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+else:
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+
+allowed_hosts_raw = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,0.0.0.0,study-guard-1.onrender.com')
+ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_raw.split(',') if h.strip()]
+if '.onrender.com' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.extend(['.onrender.com', '.railway.app'])
+
+csrf_origins_raw = config('CSRF_TRUSTED_ORIGINS', default='https://*.onrender.com,https://*.railway.app,http://localhost:8000,http://127.0.0.1:8000')
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in csrf_origins_raw.split(',') if o.strip()]
 
 
 # Application definition
@@ -87,15 +98,23 @@ WSGI_APPLICATION = 'smartstudy.wsgi.application'
 
 SECRET_KEY = config('SECRET_KEY', default='dev-secret-key-change-me')
 
+DATABASE_URL = config('DATABASE_URL', default=None)
 USE_SQLITE = config('USE_SQLITE', default='True', cast=bool)
-if USE_SQLITE:
+
+if DATABASE_URL:
+    from urllib.parse import urlparse
+    parsed_db = urlparse(DATABASE_URL)
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': parsed_db.path.lstrip('/'),
+            'USER': parsed_db.username,
+            'PASSWORD': parsed_db.password,
+            'HOST': parsed_db.hostname,
+            'PORT': parsed_db.port or 5432,
         }
     }
-else:
+elif not USE_SQLITE:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -104,6 +123,13 @@ else:
             'PASSWORD': config('DB_PASSWORD', default='your_password'),
             'HOST': config('DB_HOST', default='localhost'),
             'PORT': config('DB_PORT', default='5432'),
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 
@@ -142,7 +168,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'screenshots']
+STATICFILES_DIRS = [BASE_DIR / 'static', BASE_DIR / 'screenshots']
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

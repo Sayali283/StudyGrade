@@ -1,224 +1,122 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 
 <div class="container-fluid">
-
     <div class="row">
-
-        <!-- Sidebar -->
-
-        <div class="col-md-2 mb-4">
-
-            <div class="card-box">
-
-                <h4 class="text-primary mb-4">
-
-                    Parent Panel
-
-                </h4>
-
-                <div class="d-grid gap-3">
-
-                    <a href="/parent/dashboard/"
-                    class="btn btn-primary">
-
-                        Dashboard
-
-                    </a>
-
-                    <a href="/logout/"
-                    class="btn btn-outline-danger">
-
-                        Logout
-
-                    </a>
-
-                </div>
-
-            </div>
-
-        </div>
+        <!-- Parent Sidebar Component -->
+        {% include 'components/parent_sidebar.html' %}
 
         <!-- Main Content -->
-
         <div class="col-md-10">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <span class="dashboard-eyebrow">
+                        <i class="bi bi-shield-check"></i> Parent Guardian Portal
+                    </span>
+                    <h2 class="dashboard-title mb-0">Student Overview: {{ student.user.first_name|default:student.user.username }}</h2>
+                </div>
+            </div>
 
-            <h2 class="dashboard-title">
-
-                Welcome Parent
-
-            </h2>
-
-            <!-- Student Info -->
-
-            <div class="row g-4 mb-5">
-
+            <!-- Student Info & Stats Grid -->
+            <div class="row g-4 mb-4">
                 <div class="col-6 col-xl-3">
-
-                    <div class="card-box text-center">
-
-                        <h5 class="text-secondary">
-
-                            Student Name
-
-                        </h5>
-
-                        <div class="stat-number text-primary">
-
-                            {{ student.user.first_name }}
-
+                    <div class="stat-card fade-up-item" style="--stat-accent: var(--ember-500);">
+                        <div class="stat-icon">
+                            <i class="bi bi-person-badge" aria-hidden="true"></i>
                         </div>
-
+                        <div class="stat-label">Student Name</div>
+                        <div class="h3 fw-bold text-primary mb-0 mt-2">{{ student.user.first_name|default:student.user.username }}</div>
                     </div>
-
                 </div>
 
                 <div class="col-6 col-xl-3">
-
-                    <div class="card-box text-center">
-
-                        <h5 class="text-secondary">
-
-                            Class / Semester
-
-                        </h5>
-
-                        <div class="stat-number text-success">
-
-                            {{ student.class_semester }}
-
+                    <div class="stat-card lime-accent fade-up-item" style="--stat-accent: var(--lime-500);">
+                        <div class="stat-icon">
+                            <i class="bi bi-mortarboard" aria-hidden="true"></i>
                         </div>
-
+                        <div class="stat-label">Class / Semester</div>
+                        <div class="h3 fw-bold text-success mb-0 mt-2">{{ student.class_semester }}</div>
                     </div>
-
                 </div>
 
                 <div class="col-6 col-xl-3">
-
-                    <div class="card-box text-center">
-
-                        <h5 class="text-secondary">
-
-                            Total Quizzes
-
-                        </h5>
-
-                        <div class="stat-number text-info">
-
-                            {{ quizzes.count }}
-
+                    <div class="stat-card fade-up-item" style="--stat-accent: #5bc0be;">
+                        <div class="stat-icon" style="background: rgba(91, 192, 190, 0.12); color: #5bc0be;">
+                            <i class="bi bi-ui-checks-grid" aria-hidden="true"></i>
                         </div>
-
+                        <div class="stat-label">Total Quizzes</div>
+                        <div class="stat-number" data-countup="{{ quizzes.count }}">{{ quizzes.count }}</div>
                     </div>
-
                 </div>
 
                 <div class="col-6 col-xl-3">
-
-                    <div class="card-box text-center">
-
-                        <h5 class="text-secondary">
-                            Current Study Streak
-                        </h5>
-
-                        <div class="stat-number">
+                    <div class="stat-card fade-up-item" style="--stat-accent: var(--ember-500);">
+                        <div class="stat-icon">
+                            <i class="bi bi-fire" aria-hidden="true"></i>
+                        </div>
+                        <div class="stat-label">Current Study Streak</div>
+                        <div class="stat-number text-ember">
                             <i class="bi bi-fire" aria-hidden="true"></i> {{ current_streak }}
                         </div>
-
-                        <p class="small text-secondary mb-0">
+                        <p class="small text-secondary mb-0 mt-1">
                             {% if current_streak == 1 %}day{% else %}days{% endif %} in a row
                             {% if last_study_day %}<br>Last studied {{ last_study_day.study_date|date:"M j" }}{% else %}<br>No study days yet{% endif %}
                         </p>
-
                     </div>
-
                 </div>
-
             </div>
 
-            <!-- Quiz History -->
-
+            <!-- Quiz History Table -->
             <div class="card-box">
-
-                <h3 class="text-primary mb-4">
-
-                    Student Quiz Performance
-
-                </h3>
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h3 class="h4 text-primary mb-0">
+                        <i class="bi bi-graph-up me-2" style="color: var(--lime-500);"></i> Student Quiz Performance
+                    </h3>
+                    <span class="badge bg-primary">{{ quizzes|length }} Attempts Logged</span>
+                </div>
 
                 {% if quizzes %}
-
                     <div class="table-responsive">
-
-                        <table class="table table-hover">
-
+                        <table class="table table-hover align-middle">
                             <thead>
-
                                 <tr>
-
                                     <th>Subject</th>
                                     <th>Score</th>
                                     <th>Date</th>
-
                                 </tr>
-
                             </thead>
-
                             <tbody>
-
                                 {% for quiz in quizzes %}
-
                                 <tr>
-
                                     <td>
-
-                                        {{ quiz.subject }}
-
+                                        <div class="fw-bold text-primary">{{ quiz.subject }}</div>
                                     </td>
-
                                     <td>
-
-                                        <span class="badge bg-success fs-6">
-
+                                        <span class="badge {% if quiz.score >= 80 %}bg-success{% elif quiz.score >= 50 %}bg-warning{% else %}bg-danger{% endif %} fs-6">
                                             {{ quiz.score }}%
-
                                         </span>
-
                                     </td>
-
                                     <td>
-
-                                        {{ quiz.date }}
-
+                                        <small class="text-secondary">{{ quiz.date|date:"M j, Y, g:i a"|default:quiz.date }}</small>
                                     </td>
-
                                 </tr>
-
                                 {% endfor %}
-
                             </tbody>
-
                         </table>
-
                     </div>
-
                 {% else %}
-
-                    <div class="alert alert-warning">
-
-                        No quiz records available.
-
+                    <div class="text-center py-5">
+                        <i class="bi bi-journal-x fs-1 text-secondary mb-3 d-block"></i>
+                        <h6>No quiz records available</h6>
+                        <p class="text-secondary small">Your student has not completed any quizzes yet.</p>
                     </div>
-
                 {% endif %}
-
             </div>
 
         </div>
-
     </div>
-
 </div>
 
 {% endblock %}
