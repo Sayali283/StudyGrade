@@ -18,6 +18,8 @@ services:
         fromDatabase:
           name: studygrade-postgres
           property: connectionString
+      - key: GEMINI_API_KEY
+        sync: false
 
 databases:
   - name: studygrade-postgres
