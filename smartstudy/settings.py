@@ -43,7 +43,9 @@ else:
 allowed_hosts_raw = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,0.0.0.0,study-guard-1.onrender.com')
 ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_raw.split(',') if h.strip()]
 if '.onrender.com' not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.extend(['.onrender.com', '.railway.app'])
+    ALLOWED_HOSTS.extend(['.onrender.com', '.railway.app', 'testserver'])
+elif 'testserver' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('testserver')
 
 csrf_origins_raw = config('CSRF_TRUSTED_ORIGINS', default='https://*.onrender.com,https://*.railway.app,http://localhost:8000,http://127.0.0.1:8000')
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in csrf_origins_raw.split(',') if o.strip()]
@@ -175,3 +177,8 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 GEMINI_API_KEY = config("GEMINI_API_KEY", default="")
+
+# Authentication redirects
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'student_dashboard'
+LOGOUT_REDIRECT_URL = 'home'

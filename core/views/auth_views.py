@@ -112,6 +112,9 @@ def user_login(request):
 
         if user is not None:
             login(request, user)
+            next_url = request.GET.get("next") or request.POST.get("next")
+            if next_url and next_url.startswith("/") and not next_url.startswith("//"):
+                return redirect(next_url)
             if hasattr(user, "student"):
                 return redirect("student_dashboard")
             elif hasattr(user, "parent"):

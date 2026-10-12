@@ -2,9 +2,9 @@
 RESTful API views for StudyGrade (v1).
 Provides standardized JSON responses with error handling and authentication.
 """
+from functools import wraps
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods, require_POST
-from django.contrib.auth.decorators import login_required
 
 from core.models import Student, Notes, Quiz
 from core.services import (
@@ -33,13 +33,23 @@ def api_error(message="An error occurred", code="BAD_REQUEST", status=400):
     }, status=status)
 
 
+def api_login_required(view_func):
+    """Ensures request is authenticated, returning a 401 JSON error instead of redirecting."""
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return api_error("Authentication required.", code="UNAUTHORIZED", status=401)
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+
 @require_http_methods(["GET"])
 def health_check(request):
     """API health check probe for load balancers and status monitors."""
     return api_success({"status": "healthy", "service": "StudyGrade API v1"})
 
 
-@login_required
+@api_login_required
 @require_http_methods(["GET"])
 def get_streak_api(request):
     """Returns current active streak for the authenticated student."""
@@ -54,7 +64,7 @@ def get_streak_api(request):
     })
 
 
-@login_required
+@api_login_required
 @require_http_methods(["GET"])
 def get_analytics_api(request):
     """Returns topic accuracy metrics and next recommended study topic."""
@@ -71,7 +81,7 @@ def get_analytics_api(request):
     })
 
 
-@login_required
+@api_login_required
 @require_POST
 def record_focus_block_api(request):
     """Records a completed Pomodoro block and increments streak."""
@@ -87,7 +97,7 @@ def record_focus_block_api(request):
     }, message="Focus session recorded successfully.")
 
 
-@login_required
+@api_login_required
 @require_http_methods(["GET"])
 def list_student_notes_api(request):
     """Returns a list of notes uploaded by the student."""
@@ -99,7 +109,7 @@ def list_student_notes_api(request):
     return api_success({"notes": list(notes)})
 
 
-@login_required
+@api_login_required
 @require_http_methods(["GET"])
 def get_flashcards_api(request, note_id):
     """Returns flashcards belonging to the specified note."""
