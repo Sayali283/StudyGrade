@@ -161,7 +161,7 @@ StudyGrade/
 ├── assets/              # Architecture diagram & images
 ├── core/                # Core app logic
 ├── smartstudy/          # Django project settings & config
-├── project_files/       # Supporting project files
+├── static/              # CSS, JavaScript & theme assets
 ├── screenshots/         # README screenshots
 ├── manage.py
 ├── requirements.txt
