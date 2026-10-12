@@ -44,12 +44,18 @@
                     </div>
 
                     <!-- Dropzone -->
-                    <div class="dropzone-container mb-3" id="dropzone">
+                    <div class="dropzone-container mb-3" id="dropzone" role="button" tabindex="0" aria-label="Select file to upload">
                         <div class="dropzone-icon">
                             <i class="bi bi-file-earmark-arrow-up"></i>
                         </div>
-                        <h6 class="mb-1 text-primary">Drag & drop your study file here</h6>
-                        <p class="small text-secondary mb-0">or <span style="color: var(--ember-500); text-decoration: underline;">browse from your computer</span></p>
+                        <h6 class="mb-1 text-primary">
+                            <span class="d-none d-md-inline">Drag & drop your study file here</span>
+                            <span class="d-md-none"><i class="bi bi-hand-index-thumb me-1 text-ember"></i> Tap to select document</span>
+                        </h6>
+                        <p class="small text-secondary mb-0">
+                            <span class="d-none d-md-inline">or <span style="color: var(--ember-500); text-decoration: underline;">browse from your computer</span></span>
+                            <span class="d-md-none">Supports PDF, DOCX, TXT, Markdown</span>
+                        </p>
                         
                         <input
                             type="file"

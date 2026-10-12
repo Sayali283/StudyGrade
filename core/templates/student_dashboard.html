@@ -16,32 +16,102 @@
                 <div class="dashboard-hero-bg-art" style="background-image: url('{% static 'images/dash-hero.jpg' %}');" aria-hidden="true"></div>
                 
                 <div class="dashboard-hero-content">
-                    <div>
+                    <div class="dashboard-hero-text">
                         <span class="dashboard-eyebrow">
                             <i class="bi bi-compass-fill"></i> Your Study HQ
                         </span>
-                        <h1>Welcome back, <br><em>{{ student.user.first_name|default:student.user.username }}</em></h1>
-                        <p class="text-secondary mb-4">Turn your class notes into active practice sessions and track your daily momentum.</p>
-                        <a class="btn btn-primary" href="{% url 'pomodoro_timer' %}">
-                            <i class="bi bi-stopwatch me-1" aria-hidden="true"></i> Start a focus session <i class="bi bi-arrow-right ms-1"></i>
-                        </a>
+                        <h1 class="dashboard-hero-title">Welcome back, <em>{{ student.user.first_name|default:student.user.username }}</em></h1>
+                        <p class="dashboard-hero-subtitle text-secondary">Turn your class notes into active practice sessions and track your daily momentum.</p>
+                        
+                        <div class="dashboard-hero-actions">
+                            {% if total_notes == 0 %}
+                                <a class="btn btn-primary" href="{% url 'student_notes' %}">
+                                    <i class="bi bi-cloud-arrow-up me-1" aria-hidden="true"></i> Step 1: Upload Notes <i class="bi bi-arrow-right ms-1"></i>
+                                </a>
+                                <a class="btn btn-outline-primary" href="{% url 'pomodoro_timer' %}">
+                                    <i class="bi bi-stopwatch me-1" aria-hidden="true"></i> Focus Timer
+                                </a>
+                            {% else %}
+                                <a class="btn btn-primary" href="{% url 'pomodoro_timer' %}">
+                                    <i class="bi bi-stopwatch me-1" aria-hidden="true"></i> Start focus session <i class="bi bi-arrow-right ms-1"></i>
+                                </a>
+                                <a class="btn btn-outline-primary" href="{% url 'quiz_home' %}">
+                                    <i class="bi bi-patch-question me-1" aria-hidden="true"></i> Take a quiz
+                                </a>
+                            {% endif %}
+                        </div>
                     </div>
 
                     <!-- Glowing Streak Hero Badge -->
                     <aside class="hero-streak-badge" aria-label="Current study streak">
-                        <span class="streak-flame-icon"><i class="bi bi-fire" aria-hidden="true"></i></span>
-                        <div class="stat-label mt-2">Current Streak</div>
-                        <div class="streak-count-val">{{ current_streak }} <small style="font-size: 1.1rem; font-weight: 500;">{% if current_streak == 1 %}day{% else %}days{% endif %}</small></div>
-                        <p class="small text-secondary mb-0">
-                            {% if current_streak %}
-                                Complete a quiz or pomodoro block today to keep your streak glowing!
-                            {% else %}
-                                Complete a quiz or pomodoro block today to start your streak!
-                            {% endif %}
-                        </p>
+                        <div class="streak-flame-wrapper">
+                            <span class="streak-flame-icon"><i class="bi bi-fire" aria-hidden="true"></i></span>
+                        </div>
+                        <div class="streak-text-content">
+                            <div class="stat-label">Current Streak</div>
+                            <div class="streak-count-val">{{ current_streak }} <small style="font-size: 1.05rem; font-weight: 500;">{% if current_streak == 1 %}day{% else %}days{% endif %}</small></div>
+                            <p class="small text-secondary mb-0">
+                                {% if current_streak %}
+                                    Complete a quiz or pomodoro block today to keep your streak glowing!
+                                {% else %}
+                                    Complete a quiz or pomodoro block today to start your streak!
+                                {% endif %}
+                            </p>
+                        </div>
                     </aside>
                 </div>
             </section>
+
+            {% if total_notes == 0 or total_quizzes == 0 %}
+            <!-- Beginner-friendly Guide Card -->
+            <section class="card-box mb-4 fade-up-item" style="border-left: 4px solid var(--lime-500);">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <div>
+                        <span class="badge bg-success mb-1"><i class="bi bi-rocket-takeoff-fill me-1"></i> Quick Start Guide</span>
+                        <h3 class="h5 fw-bold text-primary mb-0">How StudyGuard Works (3 Simple Steps)</h3>
+                    </div>
+                    <span class="small text-secondary">Takes under 2 minutes to start</span>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-3 h-100" style="background: var(--bg-surface-2); border: 1px solid var(--border-subtle);">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge rounded-circle bg-primary" style="width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700;">1</span>
+                                <h4 class="h6 fw-bold text-primary mb-0">Upload Notes</h4>
+                            </div>
+                            <p class="small text-secondary mb-3">Upload lecture slides, textbook PDFs, or summaries in the Document Vault.</p>
+                            <a href="{% url 'student_notes' %}" class="btn btn-sm btn-primary w-100">
+                                <i class="bi bi-upload me-1"></i> Go to Notes
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-3 h-100" style="background: var(--bg-surface-2); border: 1px solid var(--border-subtle);">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge rounded-circle bg-secondary" style="width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700;">2</span>
+                                <h4 class="h6 fw-bold text-primary mb-0">AI Quiz & Cards</h4>
+                            </div>
+                            <p class="small text-secondary mb-3">StudyGuard automatically creates active-recall quizzes and interactive flashcards.</p>
+                            <a href="{% url 'quiz_home' %}" class="btn btn-sm btn-outline-primary w-100">
+                                <i class="bi bi-patch-question me-1"></i> Quiz Center
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-3 h-100" style="background: var(--bg-surface-2); border: 1px solid var(--border-subtle);">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge rounded-circle bg-secondary" style="width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700;">3</span>
+                                <h4 class="h6 fw-bold text-primary mb-0">Focus & Streak</h4>
+                            </div>
+                            <p class="small text-secondary mb-3">Use the 25-minute Pomodoro timer and build your continuous daily study streak.</p>
+                            <a href="{% url 'pomodoro_timer' %}" class="btn btn-sm btn-outline-success w-100">
+                                <i class="bi bi-stopwatch me-1"></i> Start Timer
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            {% endif %}
 
             <!-- Metrics Grid with Count-up Animations -->
             <div class="row g-4 mb-4">
