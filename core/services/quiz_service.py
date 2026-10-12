@@ -57,11 +57,25 @@ NOTES:
 """
             genai_module = getattr(core_views, "genai", genai) if core_views else genai
             client = genai_module.Client(api_key=api_key)
-            response = client.models.generate_content(
-                model="gemini-1.5-flash",
-                contents=prompt,
-            )
-            response_text = (response.text or "").strip()
+            models_to_try = [
+                getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash-lite"),
+                "gemini-3.8-flash",
+                "gemini-2.5-flash",
+                "gemini-1.5-flash",
+            ]
+            response = None
+            for model_name in models_to_try:
+                try:
+                    response = client.models.generate_content(
+                        model=model_name,
+                        contents=prompt,
+                    )
+                    if response and response.text:
+                        break
+                except Exception:
+                    continue
+            response_text = (response.text if response else "") or ""
+
             json_match = regex.search(r"\[[\s\S]*\]", response_text)
             if json_match:
                 generated = json.loads(json_match.group(0))
