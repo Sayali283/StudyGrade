@@ -29,5 +29,9 @@ urlpatterns = [
     path('student/flashcards/generate/<int:note_id>/', views.generate_flashcards, name='generate_flashcards'),
     path('student/flashcards/<int:note_id>/', views.study_flashcards, name='study_flashcards'),
     path('student/flashcards/<int:note_id>/complete/', views.complete_flashcard_session, name='complete_flashcard_session'),
+    path('student/notes/<int:note_id>/flowchart/', views.note_flowchart, name='note_flowchart'),
+    path('student/notes/<int:note_id>/shortnotes/', views.note_shortnotes, name='note_shortnotes'),
+    path('student/quiz/<int:quiz_id>/remediation/', views.quiz_remediation, name='quiz_remediation'),
+    path('student/remediation/<int:remediation_id>/resolve/', views.resolve_remediation, name='resolve_remediation'),
     path("student/progress/", views.student_progress, name="student_progress"),
 ]

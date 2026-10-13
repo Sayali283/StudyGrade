@@ -45,6 +45,12 @@ from .dashboard_views import (
     parent_dashboard,
     student_progress,
 )
+from .study_suite_views import (
+    note_flowchart,
+    note_shortnotes,
+    quiz_remediation,
+    resolve_remediation,
+)
 
 __all__ = [
     "home",
@@ -70,5 +76,9 @@ __all__ = [
     "student_dashboard",
     "parent_dashboard",
     "student_progress",
+    "note_flowchart",
+    "note_shortnotes",
+    "quiz_remediation",
+    "resolve_remediation",
 ]
 

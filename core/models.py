@@ -147,3 +147,62 @@ class StudyDay(models.Model):
     def __str__(self):
         return f"{self.student} - {self.study_date}"
 
+
+class VisualFlowchart(models.Model):
+    """Stores AI-generated visual flowcharts and mindmaps for study notes."""
+    DIAGRAM_TYPES = [
+        ("flowchart", "Process Flowchart"),
+        ("mindmap", "Mind Map"),
+        ("sequence", "Chronological Timeline"),
+    ]
+
+    note = models.ForeignKey(Notes, on_delete=models.CASCADE, related_name="flowcharts")
+    title = models.CharField(max_length=200)
+    diagram_type = models.CharField(max_length=50, default="flowchart", choices=DIAGRAM_TYPES)
+    mermaid_code = models.TextField(help_text="Mermaid.js diagram syntax")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.note.subject} - {self.diagram_type} #{self.id}"
+
+
+class ShortNote(models.Model):
+    """Stores AI Cornell notes, executive summaries, key terms, and mnemonics."""
+    note = models.ForeignKey(Notes, on_delete=models.CASCADE, related_name="short_notes")
+    title = models.CharField(max_length=200)
+    executive_summary = models.TextField(help_text="High-yield core summary")
+    cornell_cues = models.JSONField(default=list, help_text="List of {cue: str, note: str}")
+    key_definitions = models.JSONField(default=list, help_text="List of {term: str, definition: str}")
+    mnemonics = models.JSONField(default=list, help_text="List of {concept: str, mnemonic: str, explanation: str}")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.note.subject} - Short Notes #{self.id}"
+
+
+class RemediationReview(models.Model):
+    """Personalized remediation guidance for weak spots identified in completed quizzes."""
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="remediations")
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="remediations")
+    topic = models.CharField(max_length=150)
+    misconception_analysis = models.TextField()
+    key_takeaway = models.TextField()
+    practice_question = models.TextField()
+    practice_options = models.JSONField(default=list)
+    correct_answer = models.CharField(max_length=255)
+    explanation = models.TextField()
+    is_resolved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Remediation: {self.topic} for {self.student.user.username}"
+

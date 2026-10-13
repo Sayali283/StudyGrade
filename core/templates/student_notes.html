@@ -130,13 +130,37 @@
                                         <small class="text-secondary">{{ note.uploaded_at|date:"M d, Y"|default:note.uploaded_at }}</small>
                                     </td>
                                     <td class="text-end">
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="{% url 'view_note' note.id %}" class="btn btn-outline-success" target="_blank" title="View Document">
-                                                <i class="bi bi-eye me-1" aria-hidden="true"></i> View
+                                        <div class="d-flex align-items-center justify-content-end gap-1 flex-wrap">
+                                            <a href="{% url 'note_flowchart' note.id %}" class="btn btn-sm btn-outline-info" title="Generate Concept Flowchart">
+                                                <i class="bi bi-diagram-3 me-1" aria-hidden="true"></i> Flowchart
                                             </a>
-                                            <a href="{% url 'delete_note' note.id %}" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to delete this note?');" title="Delete Document">
-                                                <i class="bi bi-trash" aria-hidden="true"></i>
+                                            <a href="{% url 'note_shortnotes' note.id %}" class="btn btn-sm btn-outline-primary" title="Cornell Short Notes & Cheat Sheet">
+                                                <i class="bi bi-journal-text me-1" aria-hidden="true"></i> Short Notes
                                             </a>
+                                            <a href="{% url 'study_flashcards' note.id %}" class="btn btn-sm btn-outline-warning" title="Study Flashcards">
+                                                <i class="bi bi-card-text me-1" aria-hidden="true"></i> Cards
+                                            </a>
+                                            <a href="{% url 'generate_quiz' note.id %}" class="btn btn-sm btn-primary" title="Generate AI Quiz">
+                                                <i class="bi bi-patch-question me-1" aria-hidden="true"></i> Quiz
+                                            </a>
+                                            <div class="dropdown d-inline-block">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="bi bi-three-dots"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow">
+                                                    <li>
+                                                        <a class="dropdown-item" href="{% url 'view_note' note.id %}" target="_blank">
+                                                            <i class="bi bi-file-earmark-arrow-down me-2 text-success"></i> View File
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <a class="dropdown-item text-danger" href="{% url 'delete_note' note.id %}" onclick="return confirm('Are you sure you want to delete this note?');">
+                                                            <i class="bi bi-trash me-2"></i> Delete Note
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>

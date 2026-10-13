@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Weak-Spot Remediation — {{ quiz.subject }} — StudyGrade{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <span class="dashboard-eyebrow">
+                <i class="bi bi-shield-check"></i> Mastery Engine
+            </span>
+            <h2 class="dashboard-title mb-1">Targeted Concept Remediation</h2>
+            <p class="text-secondary small mb-0">Transform quiz mistakes into permanent conceptual mastery</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'view_quiz_result' quiz.id %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Result
+            </a>
+            <a href="{% url 'take_quiz' quiz.id %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-arrow-repeat me-1"></i> Retake Full Quiz
+            </a>
+        </div>
+    </div>
+
+    <!-- Diagnostic Summary Banner -->
+    <div class="card-box mb-4" style="background: linear-gradient(135deg, rgba(255, 107, 53, 0.08), rgba(163, 230, 53, 0.08)); border: 1px solid var(--border-color);">
+        <div class="row align-items-center g-3">
+            <div class="col-md-8">
+                <h4 class="h5 fw-bold text-primary mb-2">
+                    <i class="bi bi-bullseye me-2" style="color: var(--ember-500);"></i>
+                    {{ total_count }} Concept Gap{{ total_count|pluralize }} Identified in {{ quiz.subject }}
+                </h4>
+                <p class="text-secondary small mb-0">
+                    Review each misconception below and complete the mini mastery verification check to clear the gap.
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <span class="badge bg-success fs-6 px-3 py-2" id="resolution-counter">
+                    <span id="resolved-count-num">{{ resolved_count }}</span> of {{ total_count }} Resolved
+                </span>
+            </div>
+        </div>
+    </div>
+
+    {% if remediations %}
+    <div class="d-flex flex-column gap-4">
+        {% for item in remediations %}
+        <div class="card-box remediation-card {% if item.is_resolved %}border-success{% endif %}" id="remed-box-{{ item.id }}" style="border-left: 5px solid {% if item.is_resolved %}var(--lime-500){% else %}var(--ember-500){% endif %};">
+            <!-- Card Header -->
+            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary">{{ item.topic }}</span>
+                    <span class="text-secondary small">Concept Checkpoint #{{ forloop.counter }}</span>
+                </div>
+                <div>
+                    {% if item.is_resolved %}
+                        <span class="badge bg-success" id="badge-status-{{ item.id }}">
+                            <i class="bi bi-check-circle-fill me-1"></i> Mastered
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark" id="badge-status-{{ item.id }}">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Action Needed
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Misconception Breakdown -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="p-3 rounded h-100" style="background: rgba(255, 90, 95, 0.06); border: 1px solid rgba(255, 90, 95, 0.2);">
+                        <strong class="text-danger small d-block mb-1">
+                            <i class="bi bi-x-octagon me-1"></i> The Misconception / Trap
+                        </strong>
+                        <p class="small text-secondary mb-0">{{ item.misconception_analysis }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 rounded h-100" style="background: rgba(163, 230, 53, 0.06); border: 1px solid rgba(163, 230, 53, 0.2);">
+                        <strong class="text-success small d-block mb-1">
+                            <i class="bi bi-check-circle me-1"></i> The Core Takeaway Rule
+                        </strong>
+                        <p class="small text-secondary mb-0">{{ item.key_takeaway }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Verification Micro-Practice -->
+            <div class="p-3 rounded" style="background: var(--bg-surface-2); border: 1px solid var(--border-color);">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-lightning-charge-fill me-1" style="color: var(--ember-500);"></i> Mastery Verification Question
+                    </h6>
+                    <small class="text-secondary">Single Choice</small>
+                </div>
+                <p class="text-primary small mb-3">{{ item.practice_question }}</p>
+
+                <form class="remediation-form" data-remed-id="{{ item.id }}">
+                    {% csrf_token %}
+                    <div class="d-flex flex-column gap-2 mb-3">
+                        {% for opt in item.practice_options %}
+                        <div class="form-check p-2 rounded option-row" style="border: 1px solid var(--border-color); cursor: pointer;">
+                            <input class="form-check-input ms-1 me-2" type="radio" name="opt_{{ item.id }}" id="opt_{{ item.id }}_{{ forloop.counter }}" value="{{ opt }}" {% if item.is_resolved %}disabled{% endif %}>
+                            <label class="form-check-label small user-select-none w-100" for="opt_{{ item.id }}_{{ forloop.counter }}" style="cursor: pointer;">
+                                {{ opt }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <button type="submit" class="btn btn-sm btn-primary" id="btn-submit-{{ item.id }}" {% if item.is_resolved %}disabled{% endif %}>
+                            {% if item.is_resolved %}
+                                <i class="bi bi-check2"></i> Verification Complete
+                            {% else %}
+                                <i class="bi bi-send me-1"></i> Verify Mastery
+                            {% endif %}
+                        </button>
+                        <div class="feedback-msg small" id="feedback-{{ item.id }}"></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card-box text-center py-5">
+        <i class="bi bi-trophy-fill display-4 text-warning mb-3"></i>
+        <h3 class="h4 fw-bold">No Weak Spots Detected!</h3>
+        <p class="text-secondary small mb-4">You got 100% on this quiz session. Exceptional mastery!</p>
+        <a href="{% url 'quiz_home' %}" class="btn btn-primary">
+            <i class="bi bi-patch-question me-1"></i> Try Another Quiz
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+        document.querySelectorAll('.remediation-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const remedId = this.dataset.remedId;
+                const selected = this.querySelector(`input[name="opt_${remedId}"]:checked`);
+                const feedbackDiv = document.getElementById(`feedback-${remedId}`);
+                const btn = document.getElementById(`btn-submit-${remedId}`);
+
+                if (!selected) {
+                    feedbackDiv.innerHTML = '<span class="text-warning">Please select an option first.</span>';
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Checking...';
+
+                const formData = new FormData();
+                formData.append('csrfmiddlewaretoken', csrfToken);
+                formData.append('selected_option', selected.value);
+
+                fetch(`/student/remediation/${remedId}/resolve/`, {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.is_correct) {
+                        feedbackDiv.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> Correct! ${data.explanation}</span>`;
+                        btn.className = 'btn btn-sm btn-success';
+                        btn.innerHTML = '<i class="bi bi-check2"></i> Mastered!';
+                        
+                        const badge = document.getElementById(`badge-status-${remedId}`);
+                        badge.className = 'badge bg-success';
+                        badge.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Mastered';
+
+                        const box = document.getElementById(`remed-box-${remedId}`);
+                        box.style.borderLeftColor = 'var(--lime-500)';
+
+                        // Update resolved counter
+                        const numSpan = document.getElementById('resolved-count-num');
+                        if (numSpan) {
+                            numSpan.textContent = parseInt(numSpan.textContent || '0') + 1;
+                        }
+                    } else {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Try Again';
+                        feedbackDiv.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle me-1"></i> Not quite. Hint: Focus on the Core Rule above.</span>`;
+                    }
+                })
+                .catch(err => {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Verify Mastery';
+                    feedbackDiv.innerHTML = '<span class="text-danger">Network error. Please try again.</span>';
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

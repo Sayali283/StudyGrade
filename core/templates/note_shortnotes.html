@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ short_note.title }} — StudyGrade Cornell Notes{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Header & Action Bar -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 d-print-none">
+        <div>
+            <span class="dashboard-eyebrow">
+                <i class="bi bi-journal-bookmark-fill"></i> Revision Suite
+            </span>
+            <h2 class="dashboard-title mb-1">{{ note.subject }}</h2>
+            <p class="text-secondary small mb-0">Cornell Active Recall Notes, Executive Summary & Exam Cheat Sheet</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'student_notes' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Notes
+            </a>
+            <a href="{% url 'note_flowchart' note.id %}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-diagram-3 me-1"></i> Flowchart
+            </a>
+            <button type="button" class="btn btn-outline-success btn-sm" onclick="window.print();">
+                <i class="bi bi-printer me-1"></i> Print / PDF
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-copy-notes">
+                <i class="bi bi-clipboard me-1"></i> Copy All
+            </button>
+            <a href="{% url 'note_shortnotes' note.id %}?refresh=1" 
+               class="btn btn-outline-warning btn-sm"
+               onclick="return confirm('Re-analyze this document with AI to refresh notes and mnemonics?');">
+                <i class="bi bi-arrow-clockwise me-1"></i> Re-generate
+            </a>
+        </div>
+    </div>
+
+    <!-- Printable Header (Visible only on print) -->
+    <div class="d-none d-print-block mb-4 text-center border-bottom pb-3">
+        <h1 class="h3 fw-bold">{{ note.subject }}</h1>
+        <p class="text-muted small">StudyGrade Active Recall Revision Sheet • Created for {{ request.user.username }}</p>
+    </div>
+
+    <!-- 1. Executive Summary Box -->
+    <div class="card-box mb-4" style="border-left: 4px solid var(--ember-500);">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-stars" style="color: var(--ember-500); font-size: 1.25rem;"></i>
+            <h4 class="h5 fw-bold mb-0 text-primary">Executive Summary & High-Yield Core</h4>
+        </div>
+        <p class="text-secondary mb-0 leading-relaxed" style="font-size: 1.05rem; line-height: 1.6;">
+            {{ short_note.executive_summary }}
+        </p>
+    </div>
+
+    <!-- 2. Classic Cornell Active Recall Notes Layout -->
+    <div class="card-box mb-4 p-0 overflow-hidden">
+        <div class="p-3 border-bottom d-flex align-items-center justify-content-between" style="background: var(--bg-surface-2);">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-columns-gap" style="color: var(--lime-500);"></i>
+                <h5 class="fw-bold mb-0">Cornell Active Recall System</h5>
+            </div>
+            <span class="badge bg-secondary">Cues vs. In-depth Notes</span>
+        </div>
+
+        <div class="row g-0">
+            <!-- Left Column: Cues & Self-Testing Questions (35%) -->
+            <div class="col-md-4 border-end p-4" style="background: rgba(255, 107, 53, 0.03);">
+                <h6 class="text-uppercase fw-bold text-secondary mb-3" style="letter-spacing: 0.06em; font-size: 0.8rem;">
+                    <i class="bi bi-question-circle me-1" style="color: var(--ember-500);"></i> Cues & Inquiry Prompts
+                </h6>
+                <div class="d-flex flex-column gap-4">
+                    {% for item in short_note.cornell_cues %}
+                    <div class="cornell-cue-item p-2 rounded" style="border-left: 2px solid var(--ember-500);">
+                        <strong class="text-primary small d-block mb-1">{{ item.cue }}</strong>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small">No specific cues generated.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Right Column: Detailed Factual Notes (65%) -->
+            <div class="col-md-8 p-4">
+                <h6 class="text-uppercase fw-bold text-secondary mb-3" style="letter-spacing: 0.06em; font-size: 0.8rem;">
+                    <i class="bi bi-card-text me-1" style="color: var(--lime-500);"></i> Master Notes & Key Points
+                </h6>
+                <div class="d-flex flex-column gap-4">
+                    {% for item in short_note.cornell_cues %}
+                    <div class="cornell-note-item p-2">
+                        <p class="text-secondary mb-0 small" style="line-height: 1.55;">
+                            {{ item.note }}
+                        </p>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small">No notes available.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- 3. Key Definition Bank -->
+        <div class="col-lg-6">
+            <div class="card-box h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-book-half me-2" style="color: var(--lime-500);"></i> High-Yield Definitions
+                    </h5>
+                    <span class="badge bg-success">{{ short_note.key_definitions|length }} Terms</span>
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    {% for defn in short_note.key_definitions %}
+                    <div class="p-3 rounded" style="background: var(--bg-surface-2); border: 1px solid var(--border-color);">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="badge bg-primary text-uppercase" style="letter-spacing: 0.04em;">{{ defn.term }}</span>
+                        </div>
+                        <p class="text-secondary small mb-0 mt-2">{{ defn.definition }}</p>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small">No terms extracted.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Memory Mnemonics -->
+        <div class="col-lg-6">
+            <div class="card-box h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-lightbulb-fill me-2" style="color: var(--ember-500);"></i> Memory Mnemonics
+                    </h5>
+                    <span class="badge bg-warning text-dark">Recall Tricks</span>
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    {% for m in short_note.mnemonics %}
+                    <div class="p-3 rounded" style="background: rgba(255, 107, 53, 0.05); border: 1px dashed var(--ember-500);">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge bg-warning text-dark fs-6 px-3 py-1 font-monospace">{{ m.mnemonic }}</span>
+                            <strong class="text-primary small">{{ m.concept }}</strong>
+                        </div>
+                        <p class="text-secondary small mb-0">{{ m.explanation }}</p>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small">No mnemonics generated.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const btnCopy = document.getElementById("btn-copy-notes");
+        if (btnCopy) {
+            btnCopy.addEventListener("click", function() {
+                const text = `STUDYGRADE CORNELL NOTES: {{ note.subject|escapejs }}
+                
+EXECUTIVE SUMMARY:
+{{ short_note.executive_summary|escapejs }}
+
+DEFINITIONS:
+{% for d in short_note.key_definitions %}- {{ d.term|escapejs }}: {{ d.definition|escapejs }}
+{% endfor %}
+
+MNEMONICS:
+{% for m in short_note.mnemonics %}- [{{ m.mnemonic|escapejs }}] {{ m.concept|escapejs }}: {{ m.explanation|escapejs }}
+{% endfor %}`;
+
+                navigator.clipboard.writeText(text).then(() => {
+                    btnCopy.innerHTML = '<i class="bi bi-check2"></i> Copied!';
+                    setTimeout(() => { btnCopy.innerHTML = '<i class="bi bi-clipboard me-1"></i> Copy All'; }, 2000);
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

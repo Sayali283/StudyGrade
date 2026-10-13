@@ -80,6 +80,26 @@
         </div>
     </div>
 
+    <!-- Weak-Spot AI Remediation Banner -->
+    {% if wrong_count > 0 %}
+    <div class="card-box mb-4 fade-up-item" style="border-left: 5px solid var(--ember-500); background: linear-gradient(135deg, rgba(255, 107, 53, 0.08), rgba(255, 193, 7, 0.08));">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <span class="badge bg-warning text-dark mb-2">
+                    <i class="bi bi-bullseye me-1"></i> Remediation Workout Available
+                </span>
+                <h4 class="h5 fw-bold text-primary mb-1">Turn {{ wrong_count }} Mistake{{ wrong_count|pluralize }} into Conceptual Mastery</h4>
+                <p class="text-secondary small mb-0">
+                    Our AI has analyzed your missed questions and prepared personalized misconception breakdowns and micro-practice checks.
+                </p>
+            </div>
+            <a href="{% url 'quiz_remediation' quiz.id %}" class="btn btn-primary">
+                <i class="bi bi-shield-check me-1"></i> Start Remediation Workout
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Answers Review -->
     <div class="card-box mb-4">
         <div class="d-flex align-items-center justify-content-between mb-4">

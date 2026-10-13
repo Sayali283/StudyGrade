@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ chart.title }} — StudyGrade Visual Flowchart{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Header Breadcrumb & Actions -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <span class="dashboard-eyebrow">
+                <i class="bi bi-diagram-3-fill"></i> Visual Knowledge Map
+            </span>
+            <h2 class="dashboard-title mb-1">{{ note.subject }}</h2>
+            <p class="text-secondary small mb-0">AI-synthesized interactive workflow & structural concept diagram</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'student_notes' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Notes
+            </a>
+            <a href="{% url 'note_shortnotes' note.id %}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-journal-text me-1"></i> Cornell Short Notes
+            </a>
+            <a href="{% url 'generate_quiz' note.id %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-patch-question me-1"></i> Generate Quiz
+            </a>
+        </div>
+    </div>
+
+    <!-- Diagram Type Selector Tabs & Control Bar -->
+    <div class="card-box mb-4 p-3">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <!-- Diagram Type Switcher -->
+            <div class="btn-group" role="group" aria-label="Diagram Types">
+                <a href="{% url 'note_flowchart' note.id %}?type=flowchart"
+                   class="btn btn-sm {% if current_type == 'flowchart' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    <i class="bi bi-diagram-3 me-1"></i> Process Flowchart
+                </a>
+                <a href="{% url 'note_flowchart' note.id %}?type=mindmap"
+                   class="btn btn-sm {% if current_type == 'mindmap' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    <i class="bi bi-share me-1"></i> Concept Mind Map
+                </a>
+                <a href="{% url 'note_flowchart' note.id %}?type=sequence"
+                   class="btn btn-sm {% if current_type == 'sequence' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    <i class="bi bi-arrow-left-right me-1"></i> Chronological Timeline
+                </a>
+            </div>
+
+            <!-- Canvas Controls -->
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-zoom-in" title="Zoom In">
+                    <i class="bi bi-zoom-in"></i>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-zoom-out" title="Zoom Out">
+                    <i class="bi bi-zoom-out"></i>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-reset-zoom" title="Reset Zoom">
+                    <i class="bi bi-aspect-ratio"></i> Reset
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-copy-mermaid" title="Copy Mermaid Syntax">
+                    <i class="bi bi-clipboard"></i> Copy
+                </button>
+                <button type="button" class="btn btn-outline-success btn-sm" id="btn-export-svg" title="Export as SVG">
+                    <i class="bi bi-download me-1"></i> Export SVG
+                </button>
+                <a href="{% url 'note_flowchart' note.id %}?type={{ current_type }}&refresh=1" 
+                   class="btn btn-outline-warning btn-sm" 
+                   onclick="return confirm('Re-analyze this document with AI to generate a fresh diagram?');"
+                   title="Regenerate with AI">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Re-generate
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Diagram Display Canvas -->
+    <div class="card-box p-0 overflow-hidden mb-4" style="background: var(--bg-surface); border: 1px solid var(--border-color); position: relative;">
+        <!-- Canvas Status Badge -->
+        <div class="position-absolute top-0 end-0 m-3 d-flex align-items-center gap-2" style="z-index: 10;">
+            <span class="badge bg-secondary opacity-75">
+                <i class="bi bi-hand-index-thumb me-1"></i> Click & Drag to Pan
+            </span>
+            <span class="badge bg-primary opacity-75 text-uppercase">{{ current_type }}</span>
+        </div>
+
+        <div id="diagram-viewport" style="width: 100%; min-height: 540px; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: grab; padding: 2rem;">
+            <div id="diagram-container" style="transform-origin: center center; transition: transform 0.15s ease-out; width: 100%; display: flex; justify-content: center;">
+                <pre class="mermaid" id="mermaid-target" style="background: transparent; margin: 0; padding: 0; display: flex; justify-content: center; width: 100%;">
+{{ chart.mermaid_code|safe }}
+                </pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Raw Syntax Collapsible Box -->
+    <div class="card-box">
+        <details>
+            <summary class="fw-bold text-secondary user-select-none" style="cursor: pointer;">
+                <i class="bi bi-code-slash me-1"></i> View Mermaid.js Syntax
+            </summary>
+            <div class="mt-3">
+                <pre class="p-3 rounded small" style="background: var(--bg-surface-2); color: var(--text-primary); max-height: 250px; overflow-y: auto;"><code>{{ chart.mermaid_code }}</code></pre>
+            </div>
+        </details>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Mermaid.js Runtime Engine -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const isDark = !document.documentElement.hasAttribute('data-theme') || document.documentElement.getAttribute('data-theme') === 'dark';
+        
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: isDark ? 'dark' : 'default',
+            themeVariables: isDark ? {
+                darkMode: true,
+                background: '#131418',
+                primaryColor: '#FF6B35',
+                primaryTextColor: '#FFFFFF',
+                primaryBorderColor: '#FF6B35',
+                lineColor: '#A3E635',
+                secondaryColor: '#1F2027',
+                tertiaryColor: '#181920'
+            } : {},
+            flowchart: {
+                curve: 'basis',
+                htmlLabels: true
+            }
+        });
+
+        // Zoom & Pan Interactivity
+        let zoomScale = 1.0;
+        let translateX = 0;
+        let translateY = 0;
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+
+        const viewport = document.getElementById('diagram-viewport');
+        const container = document.getElementById('diagram-container');
+
+        function updateTransform() {
+            container.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomScale})`;
+        }
+
+        document.getElementById('btn-zoom-in').addEventListener('click', function() {
+            zoomScale = Math.min(zoomScale + 0.15, 3.0);
+            updateTransform();
+        });
+
+        document.getElementById('btn-zoom-out').addEventListener('click', function() {
+            zoomScale = Math.max(zoomScale - 0.15, 0.4);
+            updateTransform();
+        });
+
+        document.getElementById('btn-reset-zoom').addEventListener('click', function() {
+            zoomScale = 1.0;
+            translateX = 0;
+            translateY = 0;
+            updateTransform();
+        });
+
+        // Mouse Drag to Pan
+        viewport.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+            viewport.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+            updateTransform();
+        });
+
+        window.addEventListener('mouseup', function() {
+            isDragging = false;
+            viewport.style.cursor = 'grab';
+        });
+
+        // Copy Mermaid code
+        document.getElementById('btn-copy-mermaid').addEventListener('click', function() {
+            const raw = `{{ chart.mermaid_code|escapejs }}`;
+            navigator.clipboard.writeText(raw).then(() => {
+                const btn = document.getElementById('btn-copy-mermaid');
+                btn.innerHTML = '<i class="bi bi-check2"></i> Copied!';
+                setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard"></i> Copy'; }, 2000);
+            });
+        });
+
+        // Export SVG
+        document.getElementById('btn-export-svg').addEventListener('click', function() {
+            const svgElement = viewport.querySelector('svg');
+            if (!svgElement) {
+                alert('Diagram is still rendering. Please wait a moment.');
+                return;
+            }
+            const serializer = new XMLSerializer();
+            let source = serializer.serializeToString(svgElement);
+            if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+                source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+            }
+            const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const downloadLink = document.createElement('a');
+            downloadLink.href = url;
+            downloadLink.download = `{{ note.subject|slugify }}-{{ current_type }}.svg`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        });
+    });
+</script>
+{% endblock %}

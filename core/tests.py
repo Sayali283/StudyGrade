@@ -740,5 +740,114 @@ class AIGenerationReliabilityTests(TestCase):
 		self.assertIn("too brief", report.reason)
 
 
+class StudySuiteFeatureTests(TestCase):
+	"""Tests for Interactive Flowcharts, Cornell Short Notes, and Quiz Remediation."""
+
+	def setUp(self):
+		self.student_user = User.objects.create_user(username="suite_student", password="Password123!")
+		self.other_user = User.objects.create_user(username="other_student", password="Password123!")
+		self.student = Student.objects.create(user=self.student_user, class_semester="Sem 4")
+		self.other_student = Student.objects.create(user=self.other_user, class_semester="Sem 4")
+		self.client.force_login(self.student_user)
+
+		# Create a sample note
+		sample_content = (
+			"Photosynthesis is the biological process used by plants to convert light energy into chemical energy. "
+			"Chlorophyll is defined as the green pigment responsible for light absorption. "
+			"The light-dependent reaction produces ATP and NADPH in the thylakoid membrane. "
+			"The Calvin cycle fixes carbon dioxide into glucose within the stroma."
+		)
+		self.note = Notes.objects.create(
+			student=self.student,
+			subject="Plant Biology",
+			file=SimpleUploadedFile("biology.txt", sample_content.encode("utf-8")),
+			file_size=len(sample_content),
+		)
+
+	def test_flowchart_service_and_view(self):
+		from core.services.study_suite_service import generate_flowchart_for_note
+		chart = generate_flowchart_for_note(self.note, diagram_type="flowchart")
+		self.assertIsNotNone(chart)
+		self.assertIn("Plant Biology", chart.title)
+		self.assertIn("graph TD", chart.mermaid_code)
+
+		# Test view renders successfully
+		response = self.client.get(reverse("note_flowchart", args=[self.note.id]))
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Plant Biology")
+		self.assertContains(response, "graph TD")
+
+		# Test switching diagram type to mindmap
+		mm_response = self.client.get(reverse("note_flowchart", args=[self.note.id]) + "?type=mindmap")
+		self.assertEqual(mm_response.status_code, 200)
+		self.assertContains(mm_response, "mindmap")
+
+	def test_shortnotes_service_and_view(self):
+		from core.services.study_suite_service import generate_shortnotes_for_note
+		short_note = generate_shortnotes_for_note(self.note)
+		self.assertIsNotNone(short_note)
+		self.assertTrue(len(short_note.executive_summary) > 10)
+		self.assertTrue(len(short_note.cornell_cues) > 0)
+		self.assertTrue(len(short_note.key_definitions) > 0)
+
+		# Test view renders successfully
+		response = self.client.get(reverse("note_shortnotes", args=[self.note.id]))
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Cornell Active Recall System")
+		self.assertContains(response, short_note.executive_summary[:25])
+
+	def test_quiz_remediation_and_resolution(self):
+		from core.models import Question, QuestionAnswer, RemediationReview
+		quiz = Quiz.objects.create(student=self.student, subject="Plant Biology")
+		q = Question.objects.create(
+			quiz=quiz,
+			question_text="Where does the Calvin cycle take place?",
+			topic="Photosynthesis",
+			option_a="Thylakoid",
+			option_b="Stroma",
+			option_c="Mitochondria",
+			option_d="Ribosome",
+			correct_answer="Stroma",
+			explanation="The Calvin cycle fixes carbon in the stroma of chloroplasts.",
+		)
+		# Record incorrect answer
+		QuestionAnswer.objects.create(
+			question=q,
+			selected_answer="Thylakoid",
+			is_correct=False,
+		)
+
+		# View remediation workout
+		response = self.client.get(reverse("quiz_remediation", args=[quiz.id]))
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Targeted Concept Remediation")
+		self.assertContains(response, "Photosynthesis")
+
+		remed = RemediationReview.objects.filter(quiz=quiz, student=self.student).first()
+		self.assertIsNotNone(remed)
+		self.assertFalse(remed.is_resolved)
+
+		# Submit correct answer to resolve the remediation check
+		post_resp = self.client.post(
+			reverse("resolve_remediation", args=[remed.id]),
+			{"selected_option": remed.correct_answer},
+		)
+		self.assertEqual(post_resp.status_code, 200)
+		data = post_resp.json()
+		self.assertTrue(data["is_correct"])
+		self.assertTrue(data["is_resolved"])
+
+		remed.refresh_from_db()
+		self.assertTrue(remed.is_resolved)
+
+	def test_permission_denied_for_other_student(self):
+		self.client.force_login(self.other_user)
+		chart_resp = self.client.get(reverse("note_flowchart", args=[self.note.id]))
+		self.assertEqual(chart_resp.status_code, 404)
+
+		notes_resp = self.client.get(reverse("note_shortnotes", args=[self.note.id]))
+		self.assertEqual(notes_resp.status_code, 404)
+
+
 
 
