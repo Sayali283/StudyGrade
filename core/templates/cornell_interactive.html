@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Interactive Cornell Revision — {{ short_note.title }} — StudyGrade{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 740px;">
+    <!-- Progress Indicator -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <span class="badge bg-secondary mb-1">Cornell Active Recall System</span>
+            <h5 class="fw-bold mb-0 text-primary">Cue <span id="cue-step">1</span> of {{ cues_count }}</h5>
+        </div>
+        <a href="{% url 'note_shortnotes' note.id %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-x-lg me-1"></i> Exit Study Mode
+        </a>
+    </div>
+
+    <div class="progress mb-4" style="height: 6px;">
+        <div class="progress-bar bg-primary" id="cue-progress-bar" role="progressbar" style="width: 0%;"></div>
+    </div>
+
+    <!-- Cues Deck Container -->
+    <div id="cues-deck">
+        {% for item in cues %}
+        <div class="card-box p-4 cue-card {% if not forloop.first %}d-none{% endif %}" id="cue-card-{{ forloop.counter0 }}">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <span class="badge bg-primary text-uppercase">Cue Question</span>
+                <span class="badge bg-dark border text-light">{{ note.subject }}</span>
+            </div>
+
+            <!-- 1. The Cue Question -->
+            <div class="mb-4">
+                <h4 class="fw-bold text-primary mb-3">{{ item.cue }}</h4>
+                <p class="text-secondary small mb-3">
+                    <i class="bi bi-lightbulb me-1 text-warning"></i> Try recalling the facts from memory before checking the supporting notes.
+                </p>
+                <!-- Optional student memory note input -->
+                <textarea class="form-control form-control-sm mb-3" rows="2" placeholder="Jot down quick thoughts from memory (optional)..."></textarea>
+            </div>
+
+            <!-- Reveal Button -->
+            <div class="text-center my-4" id="reveal-container-{{ forloop.counter0 }}">
+                <button type="button" class="btn btn-outline-primary px-4 py-2" onclick="revealCueAnswer({{ forloop.counter0 }})">
+                    <i class="bi bi-eye me-1"></i> Reveal Supporting Notes
+                </button>
+            </div>
+
+            <!-- Supporting Notes (Initially Hidden) -->
+            <div class="d-none p-3 rounded mb-4" id="notes-container-{{ forloop.counter0 }}" style="background: var(--bg-surface-2); border-left: 3px solid var(--lime-500);">
+                <span class="text-success fw-bold small text-uppercase d-block mb-1">Supporting Master Note:</span>
+                <p class="text-primary small mb-0 leading-relaxed">{{ item.note }}</p>
+            </div>
+
+            <!-- Confidence Rating Buttons -->
+            <div class="d-none pt-3 border-top border-subtle" id="rating-container-{{ forloop.counter0 }}">
+                <span class="text-secondary small d-block text-center mb-2">How confident were you with this cue?</span>
+                <div class="row g-2">
+                    <div class="col-3">
+                        <button type="button" class="btn btn-outline-danger w-100 btn-sm py-2" onclick="handleCueConfidence({{ forloop.counter0 }}, '{{ item.cue|escapejs }}', 'again')">
+                            <strong>Again</strong>
+                            <small class="d-block text-muted">Review today</small>
+                        </button>
+                    </div>
+                    <div class="col-3">
+                        <button type="button" class="btn btn-outline-warning w-100 btn-sm py-2" onclick="handleCueConfidence({{ forloop.counter0 }}, '{{ item.cue|escapejs }}', 'hard')">
+                            <strong>Hard</strong>
+                            <small class="d-block text-muted">Review in 1d</small>
+                        </button>
+                    </div>
+                    <div class="col-3">
+                        <button type="button" class="btn btn-outline-primary w-100 btn-sm py-2" onclick="handleCueConfidence({{ forloop.counter0 }}, '{{ item.cue|escapejs }}', 'good')">
+                            <strong>Good</strong>
+                            <small class="d-block text-muted">Review in 3d</small>
+                        </button>
+                    </div>
+                    <div class="col-3">
+                        <button type="button" class="btn btn-outline-success w-100 btn-sm py-2" onclick="handleCueConfidence({{ forloop.counter0 }}, '{{ item.cue|escapejs }}', 'easy')">
+                            <strong>Easy</strong>
+                            <small class="d-block text-muted">Review in 7d</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Complete Screen -->
+    <div id="cue-complete-screen" class="card-box text-center py-5 d-none">
+        <div class="mb-3" style="color: var(--lime-500); font-size: 3.5rem;">
+            <i class="bi bi-patch-check-fill"></i>
+        </div>
+        <h3 class="fw-bold mb-2">Cornell Recall Completed!</h3>
+        <p class="text-secondary small mb-4">
+            You tested your active recall on all {{ cues_count }} cues from {{ note.subject }}.
+            Concepts have been synced with your Spaced Repetition queue.
+        </p>
+        <div class="d-flex justify-content-center gap-2">
+            <a href="{% url 'note_shortnotes' note.id %}" class="btn btn-primary">
+                Return to Cornell Notes
+            </a>
+            <a href="{% url 'revision_today' %}" class="btn btn-outline-success">
+                View Revision Today
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const cuesTotal = {{ cues_count }};
+let currentCueIdx = 0;
+const csrfToken = "{{ csrf_token }}";
+
+function revealCueAnswer(idx) {
+    document.getElementById(`reveal-container-${idx}`).classList.add("d-none");
+    document.getElementById(`notes-container-${idx}`).classList.remove("d-none");
+    document.getElementById(`rating-container-${idx}`).classList.remove("d-none");
+}
+
+function handleCueConfidence(idx, cueTitle, confidence) {
+    // Schedule in Spaced Repetition
+    fetch('/student/revision/add/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: `concept_name=${encodeURIComponent(cueTitle)}&subject={{ note.subject|urlencode }}&note_id={{ note.id }}&item_type=note`
+    })
+    .finally(() => {
+        advanceCueCard(idx);
+    });
+}
+
+function advanceCueCard(idx) {
+    document.getElementById(`cue-card-${idx}`).classList.add("d-none");
+    currentCueIdx++;
+
+    const progressPct = Math.round((currentCueIdx / cuesTotal) * 100);
+    document.getElementById("cue-progress-bar").style.width = `${progressPct}%`;
+
+    if (currentCueIdx < cuesTotal) {
+        document.getElementById(`cue-card-${currentCueIdx}`).classList.remove("d-none");
+        document.getElementById("cue-step").textContent = currentCueIdx + 1;
+    } else {
+        document.getElementById("cues-deck").classList.add("d-none");
+        document.getElementById("cue-complete-screen").classList.remove("d-none");
+    }
+}
+</script>
+{% endblock %}

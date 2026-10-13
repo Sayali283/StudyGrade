@@ -264,7 +264,8 @@ def _fallback_quiz_questions(text: str, question_count: int, default_topic: str,
 def evaluate_quiz_submission(quiz: Quiz, post_data: dict) -> dict:
     """
     Evaluates submitted answers for a quiz.
-    Updates QuestionAnswer models and calculates total score percentage.
+    Updates QuestionAnswer models, calculates total score percentage,
+    and automatically records mistakes in the Mistake Notebook.
     """
     questions = Question.objects.filter(quiz=quiz)
     total = questions.count()
@@ -282,6 +283,15 @@ def evaluate_quiz_submission(quiz: Quiz, post_data: dict) -> dict:
 
         if is_correct:
             correct_count += 1
+            # Advance mastery on previously missed questions
+            try:
+                from core.models import MistakeRecord
+                from core.services.mistake_service import log_mistake_review
+                m = MistakeRecord.objects.filter(student=quiz.student, question_text=q.question_text).first()
+                if m:
+                    log_mistake_review(quiz.student, m.id, was_correct=True)
+            except Exception as ex:
+                logger.debug("Mistake resolution sync skipped: %s", ex)
         else:
             wrong_count += 1
 
@@ -297,9 +307,17 @@ def evaluate_quiz_submission(quiz: Quiz, post_data: dict) -> dict:
     quiz.score = score_percentage
     quiz.save(update_fields=["score"])
 
+    # Automatically record incorrect answers in Mistake Notebook and Spaced Repetition
+    try:
+        from core.services.mistake_service import record_quiz_mistakes
+        record_quiz_mistakes(quiz, quiz.student)
+    except Exception as err:
+        logger.warning("Auto-recording quiz mistakes failed: %s", err)
+
     return {
         "score": score_percentage,
         "correct_count": correct_count,
         "wrong_count": wrong_count,
         "total": total,
     }
+

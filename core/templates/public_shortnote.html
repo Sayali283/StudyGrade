@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ short_note.title }} — StudyGrade Shared Revision Guide{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 900px;">
+    <!-- Shared Note Banner -->
+    <div class="card-box mb-4 p-3 d-flex align-items-center justify-content-between flex-wrap gap-2" style="background: rgba(255, 107, 53, 0.05); border: 1px solid var(--ember-500);">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-share-fill" style="color: var(--ember-500);"></i>
+            <div>
+                <strong class="text-primary small d-block">Shared Revision Guide</strong>
+                <span class="text-secondary small">Read-only academic study note shared via StudyGrade</span>
+            </div>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm" onclick="window.print();">
+            <i class="bi bi-printer me-1"></i> Print / PDF
+        </button>
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="card-box mb-4" style="border-left: 4px solid var(--ember-500);">
+        <h4 class="h5 fw-bold mb-2 text-primary">{{ short_note.title }}</h4>
+        <p class="text-secondary mb-0 leading-relaxed">{{ short_note.executive_summary }}</p>
+    </div>
+
+    <!-- Cornell Layout -->
+    <div class="card-box mb-4 p-0 overflow-hidden">
+        <div class="p-3 border-bottom" style="background: var(--bg-surface-2);">
+            <h6 class="fw-bold mb-0 text-primary">Cornell Notes (Cues & Detailed Points)</h6>
+        </div>
+        <div class="row g-0">
+            <div class="col-md-4 border-end p-3" style="background: rgba(255, 107, 53, 0.02);">
+                <span class="text-uppercase fw-bold text-secondary small d-block mb-3">Cues & Inquiries</span>
+                {% for item in short_note.cornell_cues %}
+                <div class="mb-3 p-2 rounded" style="border-left: 2px solid var(--ember-500);">
+                    <strong class="text-primary small d-block">{{ item.cue }}</strong>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="col-md-8 p-3">
+                <span class="text-uppercase fw-bold text-secondary small d-block mb-3">Notes & Details</span>
+                {% for item in short_note.cornell_cues %}
+                <div class="mb-3 p-2">
+                    <p class="text-secondary small mb-0">{{ item.note }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Definitions & Mnemonics -->
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card-box h-100 p-3">
+                <h6 class="fw-bold text-primary mb-3">Key Definitions</h6>
+                {% for defn in short_note.key_definitions %}
+                <div class="p-2 rounded mb-2" style="background: var(--bg-surface-2);">
+                    <span class="badge bg-primary text-uppercase">{{ defn.term }}</span>
+                    <p class="text-secondary small mb-0 mt-1">{{ defn.definition }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card-box h-100 p-3">
+                <h6 class="fw-bold text-primary mb-3">Memory Mnemonics</h6>
+                {% for m in short_note.mnemonics %}
+                <div class="p-2 rounded mb-2" style="background: rgba(255, 107, 53, 0.05); border: 1px dashed var(--ember-500);">
+                    <span class="badge bg-warning text-dark font-monospace">{{ m.mnemonic }}</span>
+                    <strong class="text-primary small ms-1">{{ m.concept }}</strong>
+                    <p class="text-secondary small mb-0 mt-1">{{ m.explanation }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

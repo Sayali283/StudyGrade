@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Today's Revision — Spaced Repetition — StudyGrade{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Header & Action -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <span class="dashboard-eyebrow">
+                <i class="bi bi-calendar2-check"></i> Spaced Repetition
+            </span>
+            <h2 class="dashboard-title mb-1">Daily Revision</h2>
+            <p class="text-secondary small mb-0">Active recall schedule optimized for long-term retention using heuristic intervals</p>
+        </div>
+        <div class="d-flex gap-2">
+            {% if summary.due_count > 0 %}
+            <a href="{% url 'start_revision_session' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-play-circle-fill me-1"></i> Start Revision Session
+            </a>
+            {% else %}
+            <button class="btn btn-outline-success btn-sm" disabled>
+                <i class="bi bi-check2-all me-1"></i> All Done for Today
+            </button>
+            {% endif %}
+            <a href="{% url 'mistake_notebook' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-journal-x me-1"></i> Mistake Notebook
+            </a>
+        </div>
+    </div>
+
+    <!-- Dashboard Metric Grid -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card-box p-3 h-100 border-start border-4 border-danger">
+                <span class="text-secondary small d-block">Due Today</span>
+                <span class="fs-4 fw-bold text-danger">{{ summary.due_count }}</span>
+                <small class="text-muted d-block mt-1">Ready for active recall</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-box p-3 h-100 border-start border-4 border-warning">
+                <span class="text-secondary small d-block">Overdue</span>
+                <span class="fs-4 fw-bold text-warning">{{ summary.overdue_count }}</span>
+                <small class="text-muted d-block mt-1">Past scheduled interval</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-box p-3 h-100 border-start border-4 border-primary">
+                <span class="text-secondary small d-block">Est. Revision Time</span>
+                <span class="fs-4 fw-bold text-primary">{{ summary.estimated_minutes }} mins</span>
+                <small class="text-muted d-block mt-1">~2 min per concept</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-box p-3 h-100 border-start border-4 border-success">
+                <span class="text-secondary small d-block">Mastered Concepts</span>
+                <span class="fs-4 fw-bold text-success">{{ summary.mastered_count }}</span>
+                <small class="text-muted d-block mt-1">Retained through 3+ cycles</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Column: Due for Revision Today -->
+        <div class="col-lg-8">
+            <div class="card-box mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-clock-history me-2" style="color: var(--ember-500);"></i> Concepts Due for Revision
+                    </h5>
+                    {% if summary.due_count > 0 %}
+                    <a href="{% url 'start_revision_session' %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-lightning-charge me-1"></i> Start Review
+                    </a>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    {% for rev in summary.due_items %}
+                    <div class="p-3 rounded border" style="background: var(--bg-surface-2);">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge {% if rev.item_type == 'mistake' %}bg-danger{% elif rev.item_type == 'concept' %}bg-primary{% else %}bg-secondary{% endif %} text-uppercase">
+                                    {{ rev.get_item_type_display }}
+                                </span>
+                                <span class="badge bg-dark border text-light">{{ rev.topic }}</span>
+                                <span class="text-muted small">Interval: {{ rev.interval_days }}d</span>
+                            </div>
+                            <span class="text-muted small">
+                                Due: {{ rev.next_review_date|date:"M d, Y" }}
+                            </span>
+                        </div>
+
+                        <h6 class="fw-semibold text-primary mb-1">{{ rev.title }}</h6>
+
+                        {% if rev.content_payload.explanation %}
+                        <p class="text-secondary small mb-2 text-truncate">
+                            {{ rev.content_payload.explanation }}
+                        </p>
+                        {% endif %}
+
+                        <div class="d-flex align-items-center justify-content-between pt-2 border-top border-subtle">
+                            <span class="text-muted small">
+                                Consecutive correct: {{ rev.consecutive_correct }} | Reviews: {{ rev.review_count }}
+                            </span>
+                            <div class="d-flex gap-1">
+                                {% if rev.mistake_record %}
+                                <a href="{% url 'quick_retry_mistake' rev.mistake_record.id %}" class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size: 0.8rem;">
+                                    Practise
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <div class="mb-2" style="color: var(--lime-500); font-size: 2.5rem;">
+                            <i class="bi bi-stars"></i>
+                        </div>
+                        <h6 class="fw-bold mb-1">Your revision queue is clear!</h6>
+                        <p class="text-muted small mb-0">Great job! All scheduled reviews for today are complete.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Column: Weak Topics Needing Attention & Mastered -->
+        <div class="col-lg-4">
+            <!-- Topics Needing Attention -->
+            <div class="card-box mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-exclamation-triangle me-2 text-warning"></i> Topics Needing Attention
+                    </h6>
+                    <span class="badge bg-warning text-dark">Focus Areas</span>
+                </div>
+                <div class="d-flex flex-column gap-2">
+                    {% for item in summary.topics_needing_attention %}
+                    <div class="p-2 rounded d-flex align-items-center justify-content-between" style="background: var(--bg-surface-2);">
+                        <div>
+                            <strong class="text-primary small d-block">{{ item.topic }}</strong>
+                            <span class="text-muted small">{{ item.subject }}</span>
+                        </div>
+                        <a href="{% url 'retry_quiz_setup' %}?mode=topic&topic={{ item.topic }}" class="badge bg-primary text-decoration-none">
+                            Practise ({{ item.item_count }})
+                        </a>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small mb-0">No concentrated weak topics identified.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Recently Mastered Topics -->
+            <div class="card-box">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-award-fill me-2" style="color: var(--lime-500);"></i> Recently Mastered
+                    </h6>
+                    <span class="badge bg-success">Mastered</span>
+                </div>
+                <div class="d-flex flex-column gap-2">
+                    {% for m in summary.mastered_items %}
+                    <div class="p-2 rounded d-flex align-items-center justify-content-between" style="background: rgba(16, 185, 129, 0.05); border-left: 2px solid var(--lime-500);">
+                        <div>
+                            <strong class="text-primary small d-block">{{ m.title|truncatechars:35 }}</strong>
+                            <span class="text-muted small">{{ m.topic }}</span>
+                        </div>
+                        <span class="badge bg-success small">{{ m.interval_days }}d interval</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small mb-0">Concepts appear here once answered correctly across 3 spaced reviews.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

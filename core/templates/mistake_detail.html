@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Review Mistake — {{ mistake.topic }} — StudyGrade{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Breadcrumb & Nav -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <span class="dashboard-eyebrow">
+                <i class="bi bi-search"></i> Misconception Breakdown
+            </span>
+            <h2 class="dashboard-title mb-1">{{ mistake.topic }}</h2>
+            <p class="text-secondary small mb-0">In-depth review of question concept, correct logic, and study materials</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'mistake_notebook' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Notebook
+            </a>
+            <form method="POST" action="{% url 'quick_retry_mistake' mistake.id %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-play-circle me-1"></i> Practise Again
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Detail Card -->
+    <div class="card-box mb-4 p-4" style="border-left: 4px solid var(--ember-500);">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge {% if mistake.status == 'mastered' %}bg-success{% elif mistake.status == 'reviewing' %}bg-warning text-dark{% else %}bg-danger{% endif %} text-uppercase">
+                    {{ mistake.get_status_display }}
+                </span>
+                <span class="badge bg-secondary">Missed {{ mistake.mistake_count }} times</span>
+                <span class="badge bg-dark border text-light">{{ mistake.subject }}</span>
+            </div>
+            <div class="text-muted small">
+                First missed: {{ mistake.first_missed_at|date:"M d, Y" }} • Last: {{ mistake.last_missed_at|date:"M d, Y" }}
+            </div>
+        </div>
+
+        <h4 class="fw-bold mb-3 text-primary">{{ mistake.question_text }}</h4>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="p-3 rounded h-100" style="background: rgba(239, 68, 68, 0.08); border-left: 3px solid #ef4444;">
+                    <span class="text-danger fw-bold small text-uppercase d-block mb-1">
+                        <i class="bi bi-x-circle me-1"></i> Your Incorrect Selection
+                    </span>
+                    <p class="mb-0 text-primary fw-medium">{{ mistake.selected_answer|default:"No answer provided" }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded h-100" style="background: rgba(16, 185, 129, 0.08); border-left: 3px solid #10b981;">
+                    <span class="text-success fw-bold small text-uppercase d-block mb-1">
+                        <i class="bi bi-check-circle me-1"></i> Verified Correct Answer
+                    </span>
+                    <p class="mb-0 text-primary fw-medium">{{ mistake.correct_answer }}</p>
+                </div>
+            </div>
+        </div>
+
+        {% if mistake.explanation %}
+        <div class="p-3 rounded mb-3" style="background: var(--bg-surface-2); border: 1px solid var(--border-color);">
+            <h6 class="fw-bold text-primary mb-2">
+                <i class="bi bi-lightbulb-fill me-1" style="color: var(--lime-500);"></i> Core Takeaway & Concept Logic
+            </h6>
+            <p class="text-secondary mb-0 leading-relaxed">{{ mistake.explanation }}</p>
+        </div>
+        {% endif %}
+
+        <div class="alert alert-secondary small mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-shield-check text-primary fs-5"></i>
+            <div>
+                <strong>Mastery Protection Rule:</strong> Merely reading this explanation does not mark the concept as mastered.
+                To master it, complete a successful practice session using the <strong>Practise Again</strong> button.
+            </div>
+        </div>
+    </div>
+
+    <!-- Connected Study Materials (Connections D & E) -->
+    <div class="row g-3">
+        <!-- Connected Visual Diagram -->
+        <div class="col-md-6">
+            <div class="card-box h-100 p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h5 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-diagram-3 me-2" style="color: var(--ember-500);"></i> Connected Visual Diagram
+                    </h5>
+                    <span class="badge bg-secondary">Visual Context</span>
+                </div>
+                <p class="text-secondary small mb-3">
+                    Viewing this concept in a visual map or process flowchart reinforces structural retention and reduces recurring confusion.
+                </p>
+                {% if related_diagram %}
+                <div class="p-2 rounded mb-3" style="background: var(--bg-surface-2);">
+                    <strong class="text-primary small d-block">{{ related_diagram.title }}</strong>
+                    <span class="text-muted small">Type: {{ related_diagram.diagram_type|title }}</span>
+                </div>
+                <a href="{% url 'note_flowchart' related_diagram.note_id %}?type={{ related_diagram.diagram_type }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-diagram-3-fill me-1"></i> Open Diagram Map
+                </a>
+                {% elif source_note %}
+                <a href="{% url 'note_flowchart' source_note.id %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-diagram-3-fill me-1"></i> Generate Concept Flowchart
+                </a>
+                {% else %}
+                <p class="text-muted small mb-0">No specific diagram found for this note.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Connected Cornell Short Notes -->
+        <div class="col-md-6">
+            <div class="card-box h-100 p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h5 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-journal-text me-2" style="color: var(--lime-500);"></i> Connected Revision Notes
+                    </h5>
+                    <span class="badge bg-secondary">Cheat Sheet</span>
+                </div>
+                <p class="text-secondary small mb-3">
+                    Review the high-yield Cornell cues, formal definitions, and memory mnemonics extracted for this topic.
+                </p>
+                {% if related_note %}
+                <div class="p-2 rounded mb-3" style="background: var(--bg-surface-2);">
+                    <strong class="text-primary small d-block">{{ related_note.title }}</strong>
+                    <span class="text-muted small">Mode: {{ related_note.get_mode_display }}</span>
+                </div>
+                <a href="{% url 'note_shortnotes' related_note.note_id %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-journal-bookmark-fill me-1"></i> Open Cornell Notes
+                </a>
+                {% elif source_note %}
+                <a href="{% url 'note_shortnotes' source_note.id %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-journal-bookmark-fill me-1"></i> View Study Notes
+                </a>
+                {% else %}
+                <p class="text-muted small mb-0">No specific Cornell notes found for this subject.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -31,12 +31,20 @@ def student_dashboard(request):
     last_quiz = quizzes.order_by("-date").first()
     last_score = last_quiz.score if last_quiz else 0.0
 
+    from core.models import MistakeRecord, ScheduledReview
+    from django.utils import timezone
+
+    unresolved_mistakes = MistakeRecord.objects.filter(student=student, status="unresolved", is_in_revision=True).count()
+    due_reviews = ScheduledReview.objects.filter(student=student, next_review_date__lte=timezone.localdate(), status__in=["due", "learning"]).count()
+
     return render(request, "student_dashboard.html", {
         "student": student,
         "total_notes": total_notes,
         "total_quizzes": total_quizzes,
         "avg_score": avg_score,
         "last_score": last_score,
+        "unresolved_mistakes": unresolved_mistakes,
+        "due_reviews": due_reviews,
         "current_streak": get_study_streak(student),
         "last_study_day": StudyDay.objects.filter(student=student).first(),
         "daily_thought": daily_study_thought(),

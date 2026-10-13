@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Test Me on This Diagram — {{ chart.title }} — StudyGrade{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 820px;">
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <span class="dashboard-eyebrow">
+                <i class="bi bi-question-diamond-fill"></i> Visual Mastery Check
+            </span>
+            <h2 class="dashboard-title mb-1">Test Me on This Diagram</h2>
+            <p class="text-secondary small mb-0">{{ chart.title }} • Verify your understanding of the diagram's relationships & concepts</p>
+        </div>
+        <a href="{% url 'note_flowchart' chart.note_id %}?type={{ chart.diagram_type }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to Diagram
+        </a>
+    </div>
+
+    <form method="POST" action="{% url 'diagram_test_me' chart.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="total_questions" value="{{ total_questions }}">
+
+        <div class="d-flex flex-column gap-4 mb-4">
+            {% for q in questions %}
+            <div class="card-box p-4" style="border-left: 4px solid var(--ember-500);">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="badge bg-secondary">Question {{ forloop.counter }} of {{ total_questions }}</span>
+                    <span class="badge bg-dark border text-light">{{ q.topic }}</span>
+                </div>
+
+                <h5 class="fw-bold text-primary mb-3">{{ q.question }}</h5>
+
+                <!-- Hidden data for grading -->
+                <input type="hidden" name="q_{{ forloop.counter0 }}_text" value="{{ q.question }}">
+                <input type="hidden" name="q_{{ forloop.counter0 }}_correct" value="{{ q.answer }}">
+                <input type="hidden" name="q_{{ forloop.counter0 }}_topic" value="{{ q.topic }}">
+                <input type="hidden" name="q_{{ forloop.counter0 }}_expl" value="{{ q.explanation }}">
+
+                <div class="d-flex flex-column gap-2">
+                    {% for opt in q.options %}
+                    <label class="p-3 rounded border d-flex align-items-center gap-3 option-label" style="background: var(--bg-surface-2); cursor: pointer;">
+                        <input type="radio" name="q_{{ forloop.parentloop.counter0 }}_selected" value="{{ opt }}" class="form-check-input mt-0" required>
+                        <span class="text-primary">{{ opt }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="card-box text-center py-5">
+                <p class="text-muted">No questions could be extracted for this diagram.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if questions %}
+        <div class="card-box p-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <span class="text-muted small">
+                <i class="bi bi-info-circle me-1 text-primary"></i> Incorrect answers will automatically be logged in your Mistake Notebook for spaced revision.
+            </span>
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-send-check me-1"></i> Submit Diagram Answers
+            </button>
+        </div>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}

@@ -849,5 +849,363 @@ class StudySuiteFeatureTests(TestCase):
 		self.assertEqual(notes_resp.status_code, 404)
 
 
+class MistakeNotebookTests(TestCase):
+	def setUp(self):
+		self.student_user = User.objects.create_user(username="mistake_student@test.com", password="password")
+		self.other_user = User.objects.create_user(username="other_student@test.com", password="password")
+		self.student = Student.objects.create(user=self.student_user, class_semester="Sem 4")
+		self.other_student = Student.objects.create(user=self.other_user, class_semester="Sem 4")
+		self.client.force_login(self.student_user)
+
+		self.quiz = Quiz.objects.create(student=self.student, subject="Database Systems")
+		self.question = Question.objects.create(
+			quiz=self.quiz,
+			question_text="What does ACID stand for in DBMS?",
+			topic="Transactions",
+			option_a="Atomicity, Consistency, Isolation, Durability",
+			option_b="Access, Control, Index, Data",
+			option_c="Array, Class, Interface, Delegate",
+			option_d="Automated, Concurrent, Isolated, Distributed",
+			correct_answer="Atomicity, Consistency, Isolation, Durability",
+			explanation="ACID guarantees reliable processing of database transactions.",
+		)
+
+	def test_incorrect_quiz_answer_automatically_records_mistake(self):
+		from core.services.quiz_service import evaluate_quiz_submission
+		from core.models import MistakeRecord, ScheduledReview
+
+		# Submit incorrect answer
+		evaluate_quiz_submission(self.quiz, {str(self.question.id): "Access, Control, Index, Data"})
+
+		mistake = MistakeRecord.objects.filter(student=self.student, question=self.question).first()
+		self.assertIsNotNone(mistake)
+		self.assertEqual(mistake.mistake_count, 1)
+		self.assertEqual(mistake.selected_answer, "Access, Control, Index, Data")
+		self.assertEqual(mistake.status, "unresolved")
+		self.assertTrue(mistake.is_in_revision)
+
+		# Check spaced repetition record was created
+		review = ScheduledReview.objects.filter(student=self.student, mistake_record=mistake).first()
+		self.assertIsNotNone(review)
+		self.assertEqual(review.status, "due")
+
+	def test_repeated_mistakes_update_frequency_and_reset_unresolved(self):
+		from core.services.quiz_service import evaluate_quiz_submission
+		from core.models import MistakeRecord
+
+		# Miss once
+		evaluate_quiz_submission(self.quiz, {str(self.question.id): "Option B"})
+		mistake = MistakeRecord.objects.get(student=self.student, question=self.question)
+		self.assertEqual(mistake.mistake_count, 1)
+
+		# Miss second time
+		evaluate_quiz_submission(self.quiz, {str(self.question.id): "Option C"})
+		mistake.refresh_from_db()
+		self.assertEqual(mistake.mistake_count, 2)
+		self.assertEqual(mistake.selected_answer, "Option C")
+		self.assertEqual(mistake.status, "unresolved")
+
+	def test_remove_mistake_from_revision_preserves_quiz_history(self):
+		from core.services.quiz_service import evaluate_quiz_submission
+		from core.models import MistakeRecord, QuestionAnswer
+
+		evaluate_quiz_submission(self.quiz, {str(self.question.id): "Option B"})
+		mistake = MistakeRecord.objects.get(student=self.student, question=self.question)
+
+		# Remove from active revision list
+		resp = self.client.post(reverse("toggle_mistake_revision", args=[mistake.id]), {"action": "remove"})
+		self.assertEqual(resp.status_code, 302)
+
+		mistake.refresh_from_db()
+		self.assertFalse(mistake.is_in_revision)
+
+		# Historical quiz QuestionAnswer record remains intact
+		qa = QuestionAnswer.objects.filter(question=self.question).first()
+		self.assertIsNotNone(qa)
+		self.assertFalse(qa.is_correct)
+
+	def test_student_cannot_access_another_students_mistakes(self):
+		from core.models import MistakeRecord
+		other_mistake = MistakeRecord.objects.create(
+			student=self.other_student,
+			subject="OS",
+			topic="Deadlock",
+			question_text="What causes deadlock?",
+			correct_answer="Circular wait",
+		)
+		resp = self.client.get(reverse("mistake_detail", args=[other_mistake.id]))
+		self.assertEqual(resp.status_code, 404)
+
+		post_resp = self.client.post(reverse("toggle_mistake_revision", args=[other_mistake.id]))
+		self.assertEqual(post_resp.status_code, 404)
+
+
+class RetryQuizTests(TestCase):
+	def setUp(self):
+		self.user = User.objects.create_user(username="retry_user@test.com", password="password")
+		self.student = Student.objects.create(user=self.user, class_semester="Sem 4")
+		self.client.force_login(self.user)
+
+		self.quiz = Quiz.objects.create(student=self.student, subject="Operating Systems")
+		self.q1 = Question.objects.create(
+			quiz=self.quiz,
+			question_text="What is a mutex?",
+			topic="Concurrency",
+			option_a="Mutual exclusion object",
+			option_b="Memory unallocated table",
+			option_c="Multi-tasking executor",
+			option_d="Microcode unit",
+			correct_answer="Mutual exclusion object",
+			explanation="Mutex prevents concurrent access to critical sections.",
+		)
+
+	def test_generates_valid_retry_quiz_from_mistakes(self):
+		from core.services.quiz_service import evaluate_quiz_submission
+		from core.services.retry_quiz_service import generate_retry_quiz
+		from core.models import MistakeRecord
+
+		# Fail question
+		evaluate_quiz_submission(self.quiz, {str(self.q1.id): "Microcode unit"})
+		mistake = MistakeRecord.objects.get(student=self.student)
+
+		# Generate retry quiz in 'mistakes' mode
+		retry_quiz = generate_retry_quiz(self.student, mode="mistakes", question_count=3)
+		self.assertIsNotNone(retry_quiz)
+		self.assertEqual(retry_quiz.student, self.student)
+		self.assertTrue(retry_quiz.question_set.count() >= 1)
+
+		# Verify options are valid and have correct answers
+		for q in retry_quiz.question_set.all():
+			options = [q.option_a, q.option_b, q.option_c, q.option_d]
+			self.assertIn(q.correct_answer, options)
+			self.assertEqual(len(set(options)), 4)
+
+	def test_correct_retry_submission_advances_mistake_mastery(self):
+		from core.services.quiz_service import evaluate_quiz_submission
+		from core.models import MistakeRecord
+
+		# Miss initially
+		evaluate_quiz_submission(self.quiz, {str(self.q1.id): "Wrong"})
+		mistake = MistakeRecord.objects.get(student=self.student, question=self.q1)
+		self.assertEqual(mistake.status, "unresolved")
+
+		# Create a retry quiz targeting this exact question
+		retry_quiz = Quiz.objects.create(student=self.student, subject="Retry Practice")
+		retry_q = Question.objects.create(
+			quiz=retry_quiz,
+			question_text=self.q1.question_text,
+			topic=self.q1.topic,
+			option_a=self.q1.option_a,
+			option_b=self.q1.option_b,
+			option_c=self.q1.option_c,
+			option_d=self.q1.option_d,
+			correct_answer=self.q1.correct_answer,
+		)
+		# Now answer correctly
+		evaluate_quiz_submission(retry_quiz, {str(retry_q.id): self.q1.correct_answer})
+		mistake.refresh_from_db()
+		self.assertEqual(mistake.status, "reviewing")
+
+
+class SpacedRepetitionTests(TestCase):
+	def setUp(self):
+		self.user = User.objects.create_user(username="sr_student@test.com", password="password")
+		self.student = Student.objects.create(user=self.user, class_semester="Sem 4")
+		self.client.force_login(self.user)
+
+	def test_schedule_and_prevent_duplicate_reviews(self):
+		from core.services.spaced_repetition_service import schedule_concept_review
+		from core.models import ScheduledReview
+
+		r1 = schedule_concept_review(
+			student=self.student,
+			concept_name="Binary Search Trees",
+			subject="Data Structures",
+			topic="Trees",
+			payload={"definition": "A sorted tree structure"},
+		)
+		self.assertIsNotNone(r1)
+
+		# Second identical call should update, not create duplicate
+		r2 = schedule_concept_review(
+			student=self.student,
+			concept_name="Binary Search Trees",
+			subject="Data Structures",
+			topic="Trees",
+			payload={"definition": "A sorted tree structure updated"},
+		)
+		self.assertEqual(r1.id, r2.id)
+		self.assertEqual(ScheduledReview.objects.filter(student=self.student).count(), 1)
+
+	def test_adaptive_intervals_on_confidence_ratings(self):
+		from core.services.spaced_repetition_service import schedule_concept_review, process_review_attempt
+
+		review = schedule_concept_review(
+			student=self.student,
+			concept_name="Graph Traversal",
+			subject="Algorithms",
+			topic="Graphs",
+			payload={},
+		)
+		self.assertEqual(review.interval_days, 1.0)
+
+		# Rate 'good' -> interval increases
+		process_review_attempt(review, was_correct=True, confidence="good")
+		review.refresh_from_db()
+		self.assertTrue(review.interval_days >= 3.0)
+		self.assertEqual(review.consecutive_correct, 1)
+
+		# Rate 'high' -> interval expands significantly
+		process_review_attempt(review, was_correct=True, confidence="high")
+		review.refresh_from_db()
+		self.assertTrue(review.interval_days >= 7.0)
+		self.assertEqual(review.consecutive_correct, 2)
+
+		# Fail ('again') -> resets interval to 1.0
+		process_review_attempt(review, was_correct=False, confidence="again")
+		review.refresh_from_db()
+		self.assertEqual(review.interval_days, 1.0)
+		self.assertEqual(review.consecutive_correct, 0)
+
+
+class VisualFlowchartMindmapTests(TestCase):
+	def setUp(self):
+		self.user = User.objects.create_user(username="diag_user@test.com", password="password")
+		self.other = User.objects.create_user(username="other_diag@test.com", password="password")
+		self.student = Student.objects.create(user=self.user, class_semester="Sem 4")
+		self.other_student = Student.objects.create(user=self.other, class_semester="Sem 4")
+		self.client.force_login(self.user)
+
+		content = b"Database normalization organizes fields and tables of a relational database."
+		self.note = Notes.objects.create(
+			student=self.student,
+			subject="Database Management",
+			file=SimpleUploadedFile("db.txt", content),
+			file_size=len(content),
+		)
+
+	def test_supports_all_seven_diagram_modes(self):
+		from core.services.study_suite_service import generate_flowchart_for_note
+
+		modes = ["flowchart", "mindmap", "concept", "sequence", "timeline", "comparison", "hierarchy"]
+		for mode in modes:
+			chart = generate_flowchart_for_note(self.note, diagram_type=mode, force_refresh=True)
+			self.assertIsNotNone(chart)
+			self.assertEqual(chart.diagram_type, mode)
+			self.assertTrue(len(chart.mermaid_code) > 10)
+
+	def test_validate_mermaid_syntax_rejects_unsafe_input(self):
+		from core.services.study_suite_service import validate_mermaid_syntax
+
+		# Valid flowchart
+		valid, _ = validate_mermaid_syntax("graph TD\n  A --> B")
+		self.assertTrue(valid)
+
+		# XSS attempt
+		invalid, msg = validate_mermaid_syntax("graph TD\n  A[<script>alert(1)</script>] --> B")
+		self.assertFalse(invalid)
+		self.assertIn("disallowed", msg)
+
+		# Unmatched brackets
+		invalid_syntax, err = validate_mermaid_syntax("graph TD\n  A[Incomplete Node --> B")
+		self.assertFalse(invalid_syntax)
+		self.assertIn("Unbalanced", err)
+
+	def test_saving_source_creates_version_snapshot(self):
+		from core.services.study_suite_service import generate_flowchart_for_note
+		from core.models import DiagramVersion
+
+		chart = generate_flowchart_for_note(self.note, diagram_type="flowchart")
+		initial_count = DiagramVersion.objects.filter(flowchart=chart).count()
+
+		new_code = "graph TD\n  Start --> Next"
+		resp = self.client.post(
+			reverse("save_flowchart_source", args=[chart.id]),
+			{"title": "Edited Chart", "mermaid_code": new_code},
+		)
+		self.assertEqual(resp.status_code, 200)
+
+		chart.refresh_from_db()
+		self.assertEqual(chart.mermaid_code, new_code)
+		self.assertEqual(DiagramVersion.objects.filter(flowchart=chart).count(), initial_count + 1)
+
+	def test_diagram_test_me_records_missed_concepts(self):
+		from core.services.study_suite_service import generate_flowchart_for_note
+		from core.models import MistakeRecord
+
+		chart = generate_flowchart_for_note(self.note, diagram_type="concept")
+
+		# Submit diagram test with incorrect answer
+		resp = self.client.post(reverse("diagram_test_me", args=[chart.id]), {
+			"total_questions": "1",
+			"q_0_text": "What is normalization?",
+			"q_0_selected": "Wrong Process",
+			"q_0_correct": "Organizing fields to reduce redundancy",
+			"q_0_topic": "Normalization",
+			"q_0_expl": "Normalization minimizes duplication.",
+		})
+		self.assertEqual(resp.status_code, 200)
+		self.assertContains(resp, "Diagram Verification Complete")
+
+		# Verify MistakeRecord was created
+		m = MistakeRecord.objects.filter(student=self.student, question_text="What is normalization?").first()
+		self.assertIsNotNone(m)
+		self.assertEqual(m.status, "unresolved")
+
+
+class CornellNotesAndCheatSheetsTests(TestCase):
+	def setUp(self):
+		self.user = User.objects.create_user(username="notes_user@test.com", password="password")
+		self.student = Student.objects.create(user=self.user, class_semester="Sem 4")
+		self.client.force_login(self.user)
+
+		content = b"TCP is a connection-oriented protocol. UDP is a connectionless protocol."
+		self.note = Notes.objects.create(
+			student=self.student,
+			subject="Computer Networks",
+			file=SimpleUploadedFile("net.txt", content),
+			file_size=len(content),
+		)
+
+	def test_generates_multiple_modes_and_cues(self):
+		from core.services.study_suite_service import generate_shortnotes_for_note
+
+		short_note = generate_shortnotes_for_note(self.note, mode="cheatsheet", length_option="short")
+		self.assertIsNotNone(short_note)
+		self.assertEqual(short_note.mode, "cheatsheet")
+		self.assertTrue(len(short_note.executive_summary) > 0)
+		self.assertTrue(len(short_note.cornell_cues) > 0)
+
+	def test_create_flashcards_from_cues_without_duplicates(self):
+		from core.services.study_suite_service import generate_shortnotes_for_note, create_flashcards_from_shortnote
+		from core.models import Flashcard
+
+		short_note = generate_shortnotes_for_note(self.note, mode="cornell")
+		created_first = create_flashcards_from_shortnote(short_note)
+		self.assertTrue(created_first > 0)
+
+		# Second creation should detect existing cards and not duplicate
+		created_second = create_flashcards_from_shortnote(short_note)
+		self.assertEqual(created_second, 0)
+
+	def test_share_token_public_access(self):
+		from core.services.study_suite_service import generate_shortnotes_for_note
+		short_note = generate_shortnotes_for_note(self.note)
+
+		# Enable sharing
+		post_resp = self.client.post(reverse("share_shortnote_toggle", args=[short_note.id]), {"action": "share"})
+		self.assertEqual(post_resp.status_code, 200)
+
+		short_note.refresh_from_db()
+		self.assertIsNotNone(short_note.share_token)
+
+		# Anonymous client can access via token
+		anon_client = self.client_class()
+		share_resp = anon_client.get(reverse("public_shortnote_view", args=[short_note.share_token]))
+		self.assertEqual(share_resp.status_code, 200)
+		self.assertContains(share_resp, "Shared Revision Guide")
+
+
+
 
 

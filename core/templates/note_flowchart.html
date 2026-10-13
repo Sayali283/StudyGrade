@@ -4,68 +4,130 @@
 {% block title %}{{ chart.title }} — StudyGrade Visual Flowchart{% endblock %}
 
 {% block content %}
-<div class="container py-3">
+<div class="container-fluid py-3 px-lg-4">
     <!-- Header Breadcrumb & Actions -->
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 d-print-none">
         <div>
             <span class="dashboard-eyebrow">
-                <i class="bi bi-diagram-3-fill"></i> Visual Knowledge Map
+                <i class="bi bi-diagram-3-fill"></i> Visual Knowledge Architecture
             </span>
             <h2 class="dashboard-title mb-1">{{ note.subject }}</h2>
-            <p class="text-secondary small mb-0">AI-synthesized interactive workflow & structural concept diagram</p>
+            <p class="text-secondary small mb-0">{{ chart.title }} • AI-synthesized interactive workflow & concept system</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
             <a href="{% url 'student_notes' %}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left me-1"></i> Back to Notes
             </a>
             <a href="{% url 'note_shortnotes' note.id %}" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-journal-text me-1"></i> Cornell Short Notes
+                <i class="bi bi-journal-text me-1"></i> Cornell Notes
+            </a>
+            <a href="{% url 'diagram_test_me' chart.id %}" class="btn btn-warning text-dark btn-sm fw-semibold">
+                <i class="bi bi-question-diamond-fill me-1"></i> Test Me on This Diagram
             </a>
             <a href="{% url 'generate_quiz' note.id %}" class="btn btn-primary btn-sm">
-                <i class="bi bi-patch-question me-1"></i> Generate Quiz
+                <i class="bi bi-patch-question me-1"></i> Full Quiz
             </a>
         </div>
     </div>
 
-    <!-- Diagram Type Selector Tabs & Control Bar -->
-    <div class="card-box mb-4 p-3">
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-            <!-- Diagram Type Switcher -->
-            <div class="btn-group" role="group" aria-label="Diagram Types">
-                <a href="{% url 'note_flowchart' note.id %}?type=flowchart"
-                   class="btn btn-sm {% if current_type == 'flowchart' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                    <i class="bi bi-diagram-3 me-1"></i> Process Flowchart
-                </a>
-                <a href="{% url 'note_flowchart' note.id %}?type=mindmap"
-                   class="btn btn-sm {% if current_type == 'mindmap' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                    <i class="bi bi-share me-1"></i> Concept Mind Map
-                </a>
-                <a href="{% url 'note_flowchart' note.id %}?type=sequence"
-                   class="btn btn-sm {% if current_type == 'sequence' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                    <i class="bi bi-arrow-left-right me-1"></i> Chronological Timeline
-                </a>
+    <!-- Controls Toolbar (Type Switcher, Complexity, Versioning, Canvas) -->
+    <div class="card-box mb-3 p-3 d-print-none">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <!-- 7 Supported Diagram Types -->
+            <div class="d-flex align-items-center gap-1 flex-wrap">
+                <span class="text-secondary small fw-bold me-1">Type:</span>
+                <div class="btn-group btn-group-sm" role="group">
+                    <a href="{% url 'note_flowchart' note.id %}?type=flowchart&complexity={{ current_complexity }}&level={{ current_level }}"
+                       class="btn {% if current_type == 'flowchart' %}btn-primary{% else %}btn-outline-secondary{% endif %}" title="Process Flowchart">
+                        <i class="bi bi-diagram-3 me-1"></i> Flowchart
+                    </a>
+                    <a href="{% url 'note_flowchart' note.id %}?type=mindmap&complexity={{ current_complexity }}&level={{ current_level }}"
+                       class="btn {% if current_type == 'mindmap' %}btn-primary{% else %}btn-outline-secondary{% endif %}" title="Concept Mind Map">
+                        <i class="bi bi-share me-1"></i> Mind Map
+                    </a>
+                    <a href="{% url 'note_flowchart' note.id %}?type=concept&complexity={{ current_complexity }}&level={{ current_level }}"
+                       class="btn {% if current_type == 'concept' %}btn-primary{% else %}btn-outline-secondary{% endif %}" title="Relationship Concept Map">
+                        <i class="bi bi-bezier2 me-1"></i> Concept Map
+                    </a>
+                    <a href="{% url 'note_flowchart' note.id %}?type=sequence&complexity={{ current_complexity }}&level={{ current_level }}"
+                       class="btn {% if current_type == 'sequence' %}btn-primary{% else %}btn-outline-secondary{% endif %}" title="Component Sequence Diagram">
+                        <i class="bi bi-arrow-left-right me-1"></i> Sequence
+                    </a>
+                    <a href="{% url 'note_flowchart' note.id %}?type=timeline&complexity={{ current_complexity }}&level={{ current_level }}"
+                       class="btn {% if current_type == 'timeline' %}btn-primary{% else %}btn-outline-secondary{% endif %}" title="Chronological Timeline">
+                        <i class="bi bi-clock-history me-1"></i> Timeline
+                    </a>
+                    <a href="{% url 'note_flowchart' note.id %}?type=comparison&complexity={{ current_complexity }}&level={{ current_level }}"
+                       class="btn {% if current_type == 'comparison' %}btn-primary{% else %}btn-outline-secondary{% endif %}" title="Comparison Matrix">
+                        <i class="bi bi-columns me-1"></i> Comparison
+                    </a>
+                    <a href="{% url 'note_flowchart' note.id %}?type=hierarchy&complexity={{ current_complexity }}&level={{ current_level }}"
+                       class="btn {% if current_type == 'hierarchy' %}btn-primary{% else %}btn-outline-secondary{% endif %}" title="Classification Hierarchy">
+                        <i class="bi bi-diagram-2 me-1"></i> Hierarchy
+                    </a>
+                </div>
             </div>
 
-            <!-- Canvas Controls -->
-            <div class="d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-zoom-in" title="Zoom In">
-                    <i class="bi bi-zoom-in"></i>
+            <!-- Detail & Complexity Controls -->
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <!-- Complexity Selector -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Depth: {{ current_complexity|title }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li><a class="dropdown-item {% if current_complexity == 'simple' %}active{% endif %}" href="{% url 'note_flowchart' note.id %}?type={{ current_type }}&complexity=simple&level={{ current_level }}">Simple (4–6 nodes)</a></li>
+                        <li><a class="dropdown-item {% if current_complexity == 'balanced' %}active{% endif %}" href="{% url 'note_flowchart' note.id %}?type={{ current_type }}&complexity=balanced&level={{ current_level }}">Balanced (7–12 nodes)</a></li>
+                        <li><a class="dropdown-item {% if current_complexity == 'detailed' %}active{% endif %}" href="{% url 'note_flowchart' note.id %}?type={{ current_type }}&complexity=detailed&level={{ current_level }}">Detailed (13–18 nodes)</a></li>
+                    </ul>
+                </div>
+
+                <!-- Explanation Level Selector -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Level: {{ current_level|title }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li><a class="dropdown-item {% if current_level == 'beginner' %}active{% endif %}" href="{% url 'note_flowchart' note.id %}?type={{ current_type }}&complexity={{ current_complexity }}&level=beginner">Beginner</a></li>
+                        <li><a class="dropdown-item {% if current_level == 'intermediate' %}active{% endif %}" href="{% url 'note_flowchart' note.id %}?type={{ current_type }}&complexity={{ current_complexity }}&level=intermediate">Intermediate</a></li>
+                        <li><a class="dropdown-item {% if current_level == 'advanced' %}active{% endif %}" href="{% url 'note_flowchart' note.id %}?type={{ current_type }}&complexity={{ current_complexity }}&level=advanced">Advanced</a></li>
+                    </ul>
+                </div>
+
+                <!-- Canvas Controls -->
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-zoom-in" title="Zoom In"><i class="bi bi-zoom-in"></i></button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-zoom-out" title="Zoom Out"><i class="bi bi-zoom-out"></i></button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-reset-zoom" title="Reset View"><i class="bi bi-aspect-ratio"></i></button>
+
+                <!-- Export & Edit Actions -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-download me-1"></i> Export
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li><button class="dropdown-item" id="btn-export-svg"><i class="bi bi-filetype-svg me-2"></i>Download Clean SVG</button></li>
+                        <li><button class="dropdown-item" id="btn-export-png"><i class="bi bi-filetype-png me-2"></i>Download PNG Image</button></li>
+                        <li><button class="dropdown-item" id="btn-copy-mermaid"><i class="bi bi-clipboard me-2"></i>Copy Mermaid Syntax</button></li>
+                        <li><button class="dropdown-item" onclick="window.print();"><i class="bi bi-printer me-2"></i>Print-Friendly View</button></li>
+                    </ul>
+                </div>
+
+                <!-- Edit Diagram Source Modal Button -->
+                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editSourceModal">
+                    <i class="bi bi-pencil-square me-1"></i> Edit Source
                 </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-zoom-out" title="Zoom Out">
-                    <i class="bi bi-zoom-out"></i>
+
+                <!-- Version History Modal Button -->
+                {% if versions %}
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#versionsModal" title="Version Snapshots">
+                    <i class="bi bi-clock-history me-1"></i> Snapshots ({{ versions|length }})
                 </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-reset-zoom" title="Reset Zoom">
-                    <i class="bi bi-aspect-ratio"></i> Reset
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-copy-mermaid" title="Copy Mermaid Syntax">
-                    <i class="bi bi-clipboard"></i> Copy
-                </button>
-                <button type="button" class="btn btn-outline-success btn-sm" id="btn-export-svg" title="Export as SVG">
-                    <i class="bi bi-download me-1"></i> Export SVG
-                </button>
-                <a href="{% url 'note_flowchart' note.id %}?type={{ current_type }}&refresh=1" 
-                   class="btn btn-outline-warning btn-sm" 
-                   onclick="return confirm('Re-analyze this document with AI to generate a fresh diagram?');"
+                {% endif %}
+
+                <!-- Regenerate Button with Confirmation -->
+                <a href="{% url 'note_flowchart' note.id %}?type={{ current_type }}&complexity={{ current_complexity }}&level={{ current_level }}&refresh=1"
+                   class="btn btn-outline-warning btn-sm"
+                   onclick="return confirm('Regenerate this diagram with AI? Any unsaved edits will be preserved as a previous version snapshot.');"
                    title="Regenerate with AI">
                     <i class="bi bi-arrow-clockwise me-1"></i> Re-generate
                 </a>
@@ -73,35 +135,159 @@
         </div>
     </div>
 
-    <!-- Interactive Diagram Display Canvas -->
-    <div class="card-box p-0 overflow-hidden mb-4" style="background: var(--bg-surface); border: 1px solid var(--border-color); position: relative;">
-        <!-- Canvas Status Badge -->
-        <div class="position-absolute top-0 end-0 m-3 d-flex align-items-center gap-2" style="z-index: 10;">
-            <span class="badge bg-secondary opacity-75">
-                <i class="bi bi-hand-index-thumb me-1"></i> Click & Drag to Pan
-            </span>
-            <span class="badge bg-primary opacity-75 text-uppercase">{{ current_type }}</span>
+    <!-- Main Workspace (Canvas + Side Drawer) -->
+    <div class="row g-3">
+        <!-- Interactive Diagram Canvas Column -->
+        <div class="col-lg-8 col-xl-9">
+            <div class="card-box p-0 overflow-hidden mb-3" style="background: var(--bg-surface); border: 1px solid var(--border-color); position: relative;">
+                <!-- Status Badges -->
+                <div class="position-absolute top-0 end-0 m-3 d-flex align-items-center gap-2 d-print-none" style="z-index: 10;">
+                    <span class="badge bg-secondary opacity-75">
+                        <i class="bi bi-hand-index-thumb me-1"></i> Click nodes for concept deep-dive
+                    </span>
+                    <span class="badge bg-primary text-uppercase">{{ current_type }}</span>
+                </div>
+
+                <!-- Canvas Viewport -->
+                <div id="diagram-viewport" style="width: 100%; min-height: 580px; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: grab; padding: 2rem;">
+                    <div id="diagram-container" style="transform-origin: center center; transition: transform 0.1s ease-out; width: 100%; display: flex; justify-content: center;">
+                        <pre class="mermaid" id="mermaid-target" style="background: transparent; margin: 0; padding: 0; display: flex; justify-content: center; width: 100%;">
+{{ chart.mermaid_code|safe }}
+                        </pre>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div id="diagram-viewport" style="width: 100%; min-height: 540px; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: grab; padding: 2rem;">
-            <div id="diagram-container" style="transform-origin: center center; transition: transform 0.15s ease-out; width: 100%; display: flex; justify-content: center;">
-                <pre class="mermaid" id="mermaid-target" style="background: transparent; margin: 0; padding: 0; display: flex; justify-content: center; width: 100%;">
-{{ chart.mermaid_code|safe }}
-                </pre>
+        <!-- Interactive Node Inspector & Active Learning Side Drawer (PART 4.3) -->
+        <div class="col-lg-4 col-xl-3">
+            <div class="card-box h-100 p-3" id="node-inspector-box">
+                <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                    <h6 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-info-circle me-1" style="color: var(--lime-500);"></i> Concept Inspector
+                    </h6>
+                    <span class="badge bg-secondary" id="inspector-badge">Click any node</span>
+                </div>
+
+                <!-- Default Prompt when no node selected -->
+                <div id="inspector-empty-state" class="text-center py-5">
+                    <div class="mb-2 text-muted" style="font-size: 2.2rem;">
+                        <i class="bi bi-cursor-fill"></i>
+                    </div>
+                    <p class="text-muted small mb-0">
+                        Click on any node in the diagram to inspect its definition, detailed explanation, practical example, and launch targeted practice!
+                    </p>
+                </div>
+
+                <!-- Populated Inspector Content -->
+                <div id="inspector-content" class="d-none d-flex flex-column gap-3">
+                    <div>
+                        <span class="text-muted small text-uppercase fw-semibold d-block">Concept</span>
+                        <h5 class="fw-bold text-primary mb-1" id="inspect-name">Concept Name</h5>
+                    </div>
+
+                    <div class="p-2 rounded" style="background: var(--bg-surface-2);">
+                        <span class="text-muted small d-block mb-1"><strong>Quick Summary:</strong></span>
+                        <p class="text-secondary small mb-0" id="inspect-simple">Summary text goes here.</p>
+                    </div>
+
+                    <div class="p-2 rounded" style="background: var(--bg-surface-2);">
+                        <span class="text-muted small d-block mb-1"><strong>Detailed Analysis:</strong></span>
+                        <p class="text-secondary small mb-0" id="inspect-detailed">Detailed explanation goes here.</p>
+                    </div>
+
+                    <div class="p-2 rounded" style="background: rgba(255, 107, 53, 0.05); border-left: 2px solid var(--ember-500);" id="inspect-example-container">
+                        <span class="text-muted small d-block mb-1"><strong style="color: var(--ember-500);">Applied Example:</strong></span>
+                        <p class="text-secondary small mb-0" id="inspect-example">Example text.</p>
+                    </div>
+
+                    <div id="inspect-source-container" class="d-none">
+                        <small class="text-muted d-block font-monospace" style="font-size: 0.75rem;">
+                            <strong>Source Reference:</strong> <span id="inspect-source"></span>
+                        </small>
+                    </div>
+
+                    <!-- Active Recall Buttons (Connections B & F) -->
+                    <div class="d-grid gap-2 pt-2 border-top border-subtle">
+                        <button type="button" class="btn btn-primary btn-sm" id="btn-practise-concept">
+                            <i class="bi bi-play-circle me-1"></i> Practise This Concept
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-sm" id="btn-add-concept-revision">
+                            <i class="bi bi-calendar-plus me-1"></i> Add to Daily Revision
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Raw Syntax Collapsible Box -->
-    <div class="card-box">
-        <details>
-            <summary class="fw-bold text-secondary user-select-none" style="cursor: pointer;">
-                <i class="bi bi-code-slash me-1"></i> View Mermaid.js Syntax
-            </summary>
-            <div class="mt-3">
-                <pre class="p-3 rounded small" style="background: var(--bg-surface-2); color: var(--text-primary); max-height: 250px; overflow-y: auto;"><code>{{ chart.mermaid_code }}</code></pre>
+<!-- Modal 1: Edit Mermaid Source Safely (PART 4.4 & 4.7) -->
+<div class="modal fade" id="editSourceModal" tabindex="-1" aria-labelledby="editSourceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);">
+            <div class="modal-header border-subtle">
+                <h5 class="modal-title fw-bold" id="editSourceModalLabel">
+                    <i class="bi bi-code-slash me-2" style="color: var(--lime-500);"></i> Edit Diagram Source
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-        </details>
+            <div class="modal-body">
+                <div class="alert alert-danger d-none py-2 small" id="edit-error-banner"></div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Diagram Title</label>
+                    <input type="text" class="form-control form-control-sm" id="edit-chart-title" value="{{ chart.title }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Mermaid.js Diagram Syntax</label>
+                    <textarea class="form-control font-monospace small" id="edit-chart-code" rows="12" style="background: var(--bg-surface-2); color: var(--text-primary);">{{ chart.mermaid_code }}</textarea>
+                    <small class="text-muted d-block mt-1">
+                        Must begin with a valid Mermaid keyword (<code>graph</code>, <code>mindmap</code>, <code>sequenceDiagram</code>, <code>timeline</code>). Unsafe HTML scripts are strictly filtered.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer border-subtle">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" id="btn-save-edited-source">
+                    <i class="bi bi-check2-circle me-1"></i> Validate & Save Snapshot
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 2: Version Snapshots & Restoration (PART 4.4) -->
+<div class="modal fade" id="versionsModal" tabindex="-1" aria-labelledby="versionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);">
+            <div class="modal-header border-subtle">
+                <h5 class="modal-title fw-bold" id="versionsModalLabel">
+                    <i class="bi bi-clock-history me-2 text-primary"></i> Version History
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for ver in versions %}
+                    <div class="list-group-item d-flex align-items-center justify-content-between p-3" style="background: transparent; color: inherit; border-color: var(--border-color);">
+                        <div>
+                            <strong class="d-block small text-primary">Version {{ ver.version_number }}: {{ ver.title }}</strong>
+                            <span class="text-muted small">{{ ver.change_summary|default:"Auto-saved snapshot" }} • {{ ver.created_at|date:"M d, H:i" }}</span>
+                        </div>
+                        <form method="POST" action="{% url 'restore_flowchart_version' chart.id ver.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-warning btn-sm py-0 px-2" onclick="return confirm('Restore this diagram version?');">
+                                Restore
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="modal-footer border-subtle">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -110,111 +296,275 @@
 <!-- Mermaid.js Runtime Engine -->
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const isDark = !document.documentElement.hasAttribute('data-theme') || document.documentElement.getAttribute('data-theme') === 'dark';
-        
-        mermaid.initialize({
-            startOnLoad: true,
-            theme: isDark ? 'dark' : 'default',
-            themeVariables: isDark ? {
-                darkMode: true,
-                background: '#131418',
-                primaryColor: '#FF6B35',
-                primaryTextColor: '#FFFFFF',
-                primaryBorderColor: '#FF6B35',
-                lineColor: '#A3E635',
-                secondaryColor: '#1F2027',
-                tertiaryColor: '#181920'
-            } : {},
-            flowchart: {
-                curve: 'basis',
-                htmlLabels: true
-            }
-        });
+document.addEventListener("DOMContentLoaded", function() {
+    const isDark = !document.documentElement.hasAttribute('data-theme') || document.documentElement.getAttribute('data-theme') === 'dark';
+    const csrfToken = "{{ csrf_token }}";
+    const chartId = {{ chart.id }};
+    const nodeDetails = {{ node_details_json|safe }};
+    let currentSelectedConcept = "";
 
-        // Zoom & Pan Interactivity
-        let zoomScale = 1.0;
-        let translateX = 0;
-        let translateY = 0;
-        let isDragging = false;
-        let startX = 0;
-        let startY = 0;
-
-        const viewport = document.getElementById('diagram-viewport');
-        const container = document.getElementById('diagram-container');
-
-        function updateTransform() {
-            container.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomScale})`;
+    // Initialize Mermaid with strict security settings
+    mermaid.initialize({
+        startOnLoad: true,
+        securityLevel: 'strict',
+        theme: isDark ? 'dark' : 'default',
+        themeVariables: isDark ? {
+            darkMode: true,
+            background: '#131418',
+            primaryColor: '#FF6B35',
+            primaryTextColor: '#FFFFFF',
+            primaryBorderColor: '#FF6B35',
+            lineColor: '#A3E635',
+            secondaryColor: '#1F2027',
+            tertiaryColor: '#181920'
+        } : {},
+        flowchart: {
+            curve: 'basis',
+            htmlLabels: true
         }
+    });
 
-        document.getElementById('btn-zoom-in').addEventListener('click', function() {
-            zoomScale = Math.min(zoomScale + 0.15, 3.0);
-            updateTransform();
-        });
+    // Zoom & Pan Interactivity
+    let zoomScale = 1.0;
+    let translateX = 0;
+    let translateY = 0;
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
 
-        document.getElementById('btn-zoom-out').addEventListener('click', function() {
-            zoomScale = Math.max(zoomScale - 0.15, 0.4);
-            updateTransform();
-        });
+    const viewport = document.getElementById('diagram-viewport');
+    const container = document.getElementById('diagram-container');
 
-        document.getElementById('btn-reset-zoom').addEventListener('click', function() {
-            zoomScale = 1.0;
-            translateX = 0;
-            translateY = 0;
-            updateTransform();
-        });
+    function updateTransform() {
+        container.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomScale})`;
+    }
 
-        // Mouse Drag to Pan
-        viewport.addEventListener('mousedown', function(e) {
-            isDragging = true;
-            startX = e.clientX - translateX;
-            startY = e.clientY - translateY;
-            viewport.style.cursor = 'grabbing';
-        });
+    document.getElementById('btn-zoom-in').addEventListener('click', function() {
+        zoomScale = Math.min(zoomScale + 0.15, 3.0);
+        updateTransform();
+    });
 
-        window.addEventListener('mousemove', function(e) {
-            if (!isDragging) return;
-            translateX = e.clientX - startX;
-            translateY = e.clientY - startY;
-            updateTransform();
-        });
+    document.getElementById('btn-zoom-out').addEventListener('click', function() {
+        zoomScale = Math.max(zoomScale - 0.15, 0.4);
+        updateTransform();
+    });
 
-        window.addEventListener('mouseup', function() {
-            isDragging = false;
-            viewport.style.cursor = 'grab';
-        });
+    document.getElementById('btn-reset-zoom').addEventListener('click', function() {
+        zoomScale = 1.0;
+        translateX = 0;
+        translateY = 0;
+        updateTransform();
+    });
 
-        // Copy Mermaid code
-        document.getElementById('btn-copy-mermaid').addEventListener('click', function() {
-            const raw = `{{ chart.mermaid_code|escapejs }}`;
-            navigator.clipboard.writeText(raw).then(() => {
-                const btn = document.getElementById('btn-copy-mermaid');
-                btn.innerHTML = '<i class="bi bi-check2"></i> Copied!';
-                setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard"></i> Copy'; }, 2000);
+    // Mouse Drag to Pan
+    viewport.addEventListener('mousedown', function(e) {
+        if (e.target.closest('text') || e.target.closest('.node')) return;
+        isDragging = true;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        viewport.style.cursor = 'grabbing';
+    });
+
+    window.addEventListener('mousemove', function(e) {
+        if (!isDragging) return;
+        translateX = e.clientX - startX;
+        translateY = e.clientY - startY;
+        updateTransform();
+    });
+
+    window.addEventListener('mouseup', function() {
+        isDragging = false;
+        viewport.style.cursor = 'grab';
+    });
+
+    // Node Click Listener Attachment (PART 4.3)
+    function attachNodeListeners() {
+        const svgElement = viewport.querySelector('svg');
+        if (!svgElement) return;
+
+        const nodes = svgElement.querySelectorAll('.node, .mindmap-node, g.actor');
+        nodes.forEach(nodeEl => {
+            nodeEl.style.cursor = 'pointer';
+            nodeEl.addEventListener('click', function(e) {
+                e.stopPropagation();
+                nodes.forEach(n => n.classList.remove('node-highlighted'));
+                nodeEl.classList.add('node-highlighted');
+
+                const rawText = nodeEl.textContent.trim();
+                selectConceptNode(rawText);
             });
         });
+    }
 
-        // Export SVG
-        document.getElementById('btn-export-svg').addEventListener('click', function() {
-            const svgElement = viewport.querySelector('svg');
-            if (!svgElement) {
-                alert('Diagram is still rendering. Please wait a moment.');
-                return;
+    setTimeout(attachNodeListeners, 400);
+
+    function selectConceptNode(rawText) {
+        currentSelectedConcept = rawText;
+
+        // Search in nodeDetails dictionary
+        let data = nodeDetails[rawText];
+        if (!data) {
+            // Find key where rawText is contained or contains key
+            for (const key of Object.keys(nodeDetails)) {
+                if (rawText.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(rawText.toLowerCase())) {
+                    data = nodeDetails[key];
+                    break;
+                }
             }
-            const serializer = new XMLSerializer();
-            let source = serializer.serializeToString(svgElement);
-            if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
-                source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
-            }
-            const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
+        }
+
+        const name = data ? data.name : rawText;
+        const simple = data ? data.simple_explanation : `Foundational concept covering ${rawText} within {{ note.subject }}.`;
+        const detailed = data ? data.detailed_explanation : `In-depth structural breakdown of ${rawText} as represented in this study diagram.`;
+        const example = data ? data.example : `Real-world application and exam scenarios for ${rawText}.`;
+        const source = data ? data.source_passage : "";
+
+        document.getElementById('inspect-name').textContent = name;
+        document.getElementById('inspect-simple').textContent = simple;
+        document.getElementById('inspect-detailed').textContent = detailed;
+        document.getElementById('inspect-example').textContent = example;
+
+        const srcContainer = document.getElementById('inspect-source-container');
+        if (source) {
+            srcContainer.classList.remove('d-none');
+            document.getElementById('inspect-source').textContent = source;
+        } else {
+            srcContainer.classList.add('d-none');
+        }
+
+        document.getElementById('inspector-badge').textContent = 'Selected';
+        document.getElementById('inspector-empty-state').classList.add('d-none');
+        document.getElementById('inspector-content').classList.remove('d-none');
+    }
+
+    // Button: Practise Concept (Connection B)
+    document.getElementById('btn-practise-concept').addEventListener('click', function() {
+        if (!currentSelectedConcept) return;
+        window.location.href = `/student/quiz/retry/?mode=topic&topic=${encodeURIComponent(currentSelectedConcept)}&subject={{ note.subject|urlencode }}`;
+    });
+
+    // Button: Add to Revision (Connection F)
+    document.getElementById('btn-add-concept-revision').addEventListener('click', function() {
+        if (!currentSelectedConcept) return;
+        const btn = document.getElementById('btn-add-concept-revision');
+        btn.disabled = true;
+
+        fetch('/student/revision/add/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `concept_name=${encodeURIComponent(currentSelectedConcept)}&subject={{ note.subject|urlencode }}&flowchart_id=${chartId}&item_type=concept`
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.innerHTML = '<i class="bi bi-check2"></i> Added to Revision!';
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-calendar-plus me-1"></i> Add to Daily Revision';
+            }, 2500);
+        })
+        .catch(err => {
+            btn.disabled = false;
+            console.error(err);
+        });
+    });
+
+    // Export SVG
+    document.getElementById('btn-export-svg').addEventListener('click', function() {
+        const svgElement = viewport.querySelector('svg');
+        if (!svgElement) {
+            alert('Diagram is still rendering.');
+            return;
+        }
+        const serializer = new XMLSerializer();
+        let source = serializer.serializeToString(svgElement);
+        if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+            source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+        }
+        const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `{{ note.subject|slugify }}-{{ current_type }}.svg`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    });
+
+    // Export PNG
+    document.getElementById('btn-export-png').addEventListener('click', function() {
+        const svgElement = viewport.querySelector('svg');
+        if (!svgElement) return;
+
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svgElement);
+        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const URLObj = window.URL || window.webkitURL || window;
+        const blobURL = URLObj.createObjectURL(svgBlob);
+
+        const image = new Image();
+        image.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = image.width || 1200;
+            canvas.height = image.height || 800;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = isDark ? '#131418' : '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(image, 0, 0);
+
+            const pngURL = canvas.toDataURL('image/png');
             const downloadLink = document.createElement('a');
-            downloadLink.href = url;
-            downloadLink.download = `{{ note.subject|slugify }}-{{ current_type }}.svg`;
+            downloadLink.href = pngURL;
+            downloadLink.download = `{{ note.subject|slugify }}-{{ current_type }}.png`;
             document.body.appendChild(downloadLink);
             downloadLink.click();
             document.body.removeChild(downloadLink);
+        };
+        image.src = blobURL;
+    });
+
+    // Copy Mermaid code
+    document.getElementById('btn-copy-mermaid').addEventListener('click', function() {
+        const raw = `{{ chart.mermaid_code|escapejs }}`;
+        navigator.clipboard.writeText(raw).then(() => {
+            const btn = document.getElementById('btn-copy-mermaid');
+            btn.innerHTML = '<i class="bi bi-check2 me-2"></i>Copied!';
+            setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard me-2"></i>Copy Mermaid Syntax'; }, 2000);
         });
     });
+
+    // Save edited source
+    document.getElementById('btn-save-edited-source').addEventListener('click', function() {
+        const newTitle = document.getElementById('edit-chart-title').value.trim();
+        const newCode = document.getElementById('edit-chart-code').value.trim();
+        const errorBanner = document.getElementById('edit-error-banner');
+
+        fetch(`/student/diagram/${chartId}/save/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `title=${encodeURIComponent(newTitle)}&mermaid_code=${encodeURIComponent(newCode)}`
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                errorBanner.textContent = data.error || 'Failed to save diagram.';
+                errorBanner.classList.remove('d-none');
+            }
+        })
+        .catch(err => {
+            errorBanner.textContent = 'Network or validation error.';
+            errorBanner.classList.remove('d-none');
+        });
+    });
+});
 </script>
 {% endblock %}

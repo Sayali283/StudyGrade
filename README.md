@@ -30,7 +30,12 @@ Students upload course documents (PDF, DOCX, TXT, or Markdown), synthesize key c
 
 | | Feature | Highlights |
 |---|---|---|
-| 🤖 | **AI Quiz Synthesis** | Generates 5 to 30 grounded MCQs with detailed explanations, difficulty tags, and citations using Gemini models (`gemini-3.5-flash-lite`, `gemini-3.8-flash`, etc.) with automatic cloze-deletion NLP fallback. |
+| 📓 | **Mistake Notebook** | Automatically captures incorrect quiz answers with full question context, tracks repeated errors, filters by subject/topic/status, and supports non-destructive revision removal without losing quiz history. |
+| 🔄 | **Intelligent Retry Quiz** | Targeted practice across Quick Retry (3–5 qs), Mistake Practice, and Topic Mastery modes. Generates alternative questions testing identical underlying principles with plausible distractors. |
+| 📅 | **Spaced Repetition & Daily Revision** | Adaptive interval scheduling (*Again*, *Hard*, *Good*, *Easy*) up to 90 days. Dedicated dashboard tracking reviews due today, overdue reviews, and estimated revision times with duplicate protection. |
+| 🗺️ | **Visual Flowcharts & Mindmaps** | 7 diagram modes (*Flowchart, Mindmap, Concept Map, Sequence, Timeline, Comparison, Hierarchy*), complexity/level depth sliders, interactive clickable SVG node inspector, PNG/SVG exports, source editor with syntax validation, version snapshots, and "Test Me on This Diagram" quiz. |
+| 📝 | **Cornell Short Notes & Cheat Sheets** | 7 modes (*Cornell Notes, Quick Revision, Exam Prep, Last-Minute Cheat Sheet, Beginner, Interview, Custom*), grounded definition and mnemonic extraction, personal annotations, snapshot rollback, interactive Cornell recall mode, 1-click flashcard generation, and revocable public sharing. |
+| 🤖 | **AI Quiz Synthesis** | Generates 5 to 30 grounded MCQs with detailed explanations, difficulty tags, and citations using Gemini models with automatic cloze-deletion NLP fallback. |
 | 🗂️ | **Interactive Flashcards** | Generates interactive front-and-back study decks with 3D flip animations and spaced study tracking. |
 | ⏱️ | **Pomodoro Focus Studio** | 25-minute deep work intervals with break cycles and automatic daily study streak incrementing. |
 | 📊 | **Topic Mastery & Analytics** | Visualizes topic-level accuracy percentages and recommends focus areas for revision. |
@@ -146,7 +151,7 @@ Visit **[http://127.0.0.1:8000](http://127.0.0.1:8000)** in your browser!
 
 ## 🧪 Running Automated Tests
 
-StudyGrade features an extensive automated test suite covering security authorization, upload validation, storage quotas, AI generation with mocking, and analytics:
+StudyGrade features an extensive automated test suite of **55 unit and integration tests** covering the Mistake Notebook, Intelligent Retry Quiz, Spaced Repetition, Visual Diagrams (all 7 modes), Cornell Notes, security authorization, storage quotas, and analytics:
 
 ```bash
 python manage.py test

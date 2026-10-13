@@ -80,22 +80,30 @@
         </div>
     </div>
 
-    <!-- Weak-Spot AI Remediation Banner -->
+    <!-- Weak-Spot AI Remediation & Mistake Tracking Banner -->
     {% if wrong_count > 0 %}
     <div class="card-box mb-4 fade-up-item" style="border-left: 5px solid var(--ember-500); background: linear-gradient(135deg, rgba(255, 107, 53, 0.08), rgba(255, 193, 7, 0.08));">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
             <div>
                 <span class="badge bg-warning text-dark mb-2">
-                    <i class="bi bi-bullseye me-1"></i> Remediation Workout Available
+                    <i class="bi bi-journal-x me-1"></i> Recorded in Mistake Notebook
                 </span>
-                <h4 class="h5 fw-bold text-primary mb-1">Turn {{ wrong_count }} Mistake{{ wrong_count|pluralize }} into Conceptual Mastery</h4>
+                <h4 class="h5 fw-bold text-primary mb-1">{{ wrong_count }} Mistake{{ wrong_count|pluralize }} Logged for Revision</h4>
                 <p class="text-secondary small mb-0">
-                    Our AI has analyzed your missed questions and prepared personalized misconception breakdowns and micro-practice checks.
+                    Your incorrect answers have been automatically logged in your Mistake Notebook and added to your Daily Revision queue.
                 </p>
             </div>
-            <a href="{% url 'quiz_remediation' quiz.id %}" class="btn btn-primary">
-                <i class="bi bi-shield-check me-1"></i> Start Remediation Workout
-            </a>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{% url 'retry_quiz_setup' %}?mode=mistakes&subject={{ quiz.subject|urlencode }}" class="btn btn-primary">
+                    <i class="bi bi-arrow-repeat me-1"></i> Intelligent Retry
+                </a>
+                <a href="{% url 'mistake_notebook' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-journal-x me-1"></i> Mistake Notebook
+                </a>
+                <a href="{% url 'quiz_remediation' quiz.id %}" class="btn btn-outline-warning text-dark">
+                    <i class="bi bi-shield-check me-1"></i> Remediation
+                </a>
+            </div>
         </div>
     </div>
     {% endif %}

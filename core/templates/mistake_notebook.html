@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mistake Notebook — StudyGrade{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Header & Action Bar -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <span class="dashboard-eyebrow">
+                <i class="bi bi-journal-x"></i> Adaptive Learning
+            </span>
+            <h2 class="dashboard-title mb-1">Mistake Notebook</h2>
+            <p class="text-secondary small mb-0">Track concept misconceptions, retry weak areas, and practice with spaced repetition</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'retry_quiz_setup' %}?mode=mistakes" class="btn btn-primary btn-sm">
+                <i class="bi bi-arrow-repeat me-1"></i> Practise Mistakes
+            </a>
+            <a href="{% url 'revision_today' %}" class="btn btn-outline-success btn-sm">
+                <i class="bi bi-calendar2-check me-1"></i> Today's Revision
+            </a>
+            <a href="{% url 'quiz_home' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-patch-question me-1"></i> Quiz Center
+            </a>
+        </div>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card-box p-3 h-100 border-start border-4 border-danger">
+                <span class="text-secondary small d-block">Unresolved</span>
+                <span class="fs-4 fw-bold text-danger">{{ unresolved_count }}</span>
+                <small class="text-muted d-block mt-1">Need immediate practice</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-box p-3 h-100 border-start border-4 border-warning">
+                <span class="text-secondary small d-block">In Review</span>
+                <span class="fs-4 fw-bold text-warning">{{ reviewing_count }}</span>
+                <small class="text-muted d-block mt-1">Practiced once, verifying</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-box p-3 h-100 border-start border-4 border-success">
+                <span class="text-secondary small d-block">Mastered</span>
+                <span class="fs-4 fw-bold text-success">{{ mastered_count }}</span>
+                <small class="text-muted d-block mt-1">Confirmed with correct retries</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-box p-3 h-100 border-start border-4 border-primary">
+                <span class="text-secondary small d-block">Active in Revision</span>
+                <span class="fs-4 fw-bold text-primary">{{ total_active_count }}</span>
+                <small class="text-muted d-block mt-1">In scheduled rotation</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="card-box mb-4 p-3">
+        <form method="GET" action="{% url 'mistake_notebook' %}" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Search questions or topics..." value="{{ search_query }}">
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <select name="subject" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">All Subjects</option>
+                    {% for subj in distinct_subjects %}
+                    <option value="{{ subj }}" {% if subject_filter == subj %}selected{% endif %}>{{ subj }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <select name="topic" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">All Topics</option>
+                    {% for top in distinct_topics %}
+                    <option value="{{ top }}" {% if topic_filter == top %}selected{% endif %}>{{ top }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    <option value="unresolved" {% if status_filter == 'unresolved' %}selected{% endif %}>Unresolved</option>
+                    <option value="reviewing" {% if status_filter == 'reviewing' %}selected{% endif %}>In Review</option>
+                    <option value="mastered" {% if status_filter == 'mastered' %}selected{% endif %}>Mastered</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="priority" {% if sort_by == 'priority' %}selected{% endif %}>Priority: Unresolved First</option>
+                    <option value="frequency" {% if sort_by == 'frequency' %}selected{% endif %}>Most Repeated Mistakes</option>
+                    <option value="due" {% if sort_by == 'due' %}selected{% endif %}>Scheduled Due Date</option>
+                    <option value="recent" {% if sort_by == 'recent' %}selected{% endif %}>Recently Missed</option>
+                </select>
+            </div>
+            <div class="col-md-1 d-flex gap-1">
+                <button type="submit" class="btn btn-primary btn-sm w-100" title="Apply filter">Filter</button>
+                {% if search_query or subject_filter or topic_filter or status_filter or show_removed %}
+                <a href="{% url 'mistake_notebook' %}" class="btn btn-outline-secondary btn-sm" title="Clear filters"><i class="bi bi-x"></i></a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Mistakes List -->
+    <div class="d-flex flex-column gap-3">
+        {% for m in mistakes %}
+        <div class="card-box p-3" id="mistake-card-{{ m.id }}" style="border-left: 4px solid {% if m.status == 'mastered' %}var(--lime-500){% elif m.status == 'reviewing' %}#f59e0b{% else %}var(--ember-500){% endif %};">
+            <div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="badge {% if m.status == 'mastered' %}bg-success{% elif m.status == 'reviewing' %}bg-warning text-dark{% else %}bg-danger{% endif %} text-uppercase" style="letter-spacing: 0.04em;">
+                        {{ m.get_status_display }}
+                    </span>
+                    <span class="badge bg-secondary">
+                        <i class="bi bi-repeat me-1"></i> Missed {{ m.mistake_count }} {% if m.mistake_count == 1 %}time{% else %}times{% endif %}
+                    </span>
+                    <span class="badge bg-dark border text-light">{{ m.subject }}</span>
+                    <span class="badge bg-dark border text-light">{{ m.topic }}</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    {% if m.next_review_at %}
+                    <small class="text-secondary" title="Next scheduled review">
+                        <i class="bi bi-clock-history me-1"></i> Due: {{ m.next_review_at|date:"M d, Y" }}
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Question & Answers -->
+            <div class="mb-3">
+                <h5 class="fw-bold mb-2 text-primary" style="font-size: 1.05rem;">{{ m.question_text }}</h5>
+                <div class="row g-2 small">
+                    <div class="col-md-6">
+                        <div class="p-2 rounded" style="background: rgba(239, 68, 68, 0.08); border-left: 3px solid #ef4444;">
+                            <span class="text-muted d-block small">Your Selected Answer:</span>
+                            <span class="fw-semibold text-danger">{{ m.selected_answer|default:"No answer selected" }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-2 rounded" style="background: rgba(16, 185, 129, 0.08); border-left: 3px solid #10b981;">
+                            <span class="text-muted d-block small">Verified Correct Principle:</span>
+                            <span class="fw-semibold text-success">{{ m.correct_answer }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if m.explanation %}
+            <div class="p-2 rounded mb-3 small text-secondary" style="background: var(--bg-surface-2);">
+                <i class="bi bi-info-circle me-1 text-primary"></i> <strong>Key Takeaway:</strong> {{ m.explanation }}
+            </div>
+            {% endif %}
+
+            <!-- Action Controls -->
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pt-2 border-top border-subtle">
+                <div class="text-muted small">
+                    Last missed: {{ m.last_missed_at|date:"M d, Y H:i" }}
+                    {% if m.last_reviewed_at %} • Last reviewed: {{ m.last_reviewed_at|date:"M d, Y" }}{% endif %}
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'mistake_detail' m.id %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-eye me-1"></i> Review Mistake
+                    </a>
+                    <form method="POST" action="{% url 'quick_retry_mistake' m.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-play-circle me-1"></i> Practise Again
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-remove-revision" data-id="{{ m.id }}" data-in-revision="{{ m.is_in_revision|yesno:'true,false' }}">
+                        {% if m.is_in_revision %}
+                        <i class="bi bi-archive me-1"></i> Hide from Revision
+                        {% else %}
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Restore
+                        {% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="card-box text-center py-5">
+            <div class="mb-3" style="color: var(--lime-500); font-size: 3rem;">
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <h4 class="fw-bold mb-2">No Mistakes Found!</h4>
+            <p class="text-secondary small mb-3">
+                {% if search_query or subject_filter or topic_filter or status_filter %}
+                No mistakes match your selected filter criteria. Try resetting filters.
+                {% else %}
+                You have not logged any quiz errors yet, or all your mistakes have been mastered!
+                {% endif %}
+            </p>
+            <div class="d-flex justify-content-center gap-2">
+                {% if search_query or subject_filter or topic_filter or status_filter %}
+                <a href="{% url 'mistake_notebook' %}" class="btn btn-outline-secondary btn-sm">Clear Filters</a>
+                {% endif %}
+                <a href="{% url 'quiz_home' %}" class="btn btn-primary btn-sm">Take a Quiz</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // AJAX toggle for Hide from Revision
+    document.querySelectorAll(".btn-remove-revision").forEach(btn => {
+        btn.addEventListener("click", function() {
+            const mistakeId = this.getAttribute("data-id");
+            const isInRevision = this.getAttribute("data-in-revision") === "true";
+            const csrfToken = "{{ csrf_token }}";
+
+            fetch(`/student/mistakes/${mistakeId}/toggle/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: `action=${isInRevision ? 'remove' : 'restore'}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const card = document.getElementById(`mistake-card-${mistakeId}`);
+                    if (card && isInRevision) {
+                        card.style.transition = "opacity 0.3s ease";
+                        card.style.opacity = "0.5";
+                        btn.innerHTML = '<i class="bi bi-arrow-counterclockwise me-1"></i> Restore';
+                        btn.setAttribute("data-in-revision", "false");
+                    } else if (card) {
+                        card.style.opacity = "1";
+                        btn.innerHTML = '<i class="bi bi-archive me-1"></i> Hide from Revision';
+                        btn.setAttribute("data-in-revision", "true");
+                    }
+                }
+            })
+            .catch(err => console.error(err));
+        });
+    });
+});
+</script>
+{% endblock %}

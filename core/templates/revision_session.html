@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Active Recall Revision Session — StudyGrade{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 760px;">
+    <!-- Progress Indicator -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <span class="badge bg-secondary mb-1">Active Recall Session</span>
+            <h5 class="fw-bold mb-0 text-primary">Concept <span id="current-step">1</span> of {{ total_items }}</h5>
+        </div>
+        <a href="{% url 'revision_today' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-x-lg me-1"></i> Exit Session
+        </a>
+    </div>
+
+    <div class="progress mb-4" style="height: 6px;">
+        <div class="progress-bar bg-primary" id="session-progress-bar" role="progressbar" style="width: 0%;"></div>
+    </div>
+
+    <!-- Active Review Cards Deck -->
+    <div id="deck-container">
+        {% for rev in reviews %}
+        <div class="review-card card-box p-4 {% if not forloop.first %}d-none{% endif %}" id="card-{{ forloop.counter0 }}" data-id="{{ rev.id }}">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <span class="badge {% if rev.item_type == 'mistake' %}bg-danger{% elif rev.item_type == 'concept' %}bg-primary{% else %}bg-secondary{% endif %} text-uppercase">
+                    {{ rev.get_item_type_display }}
+                </span>
+                <span class="badge bg-dark border text-light">{{ rev.topic }}</span>
+            </div>
+
+            <!-- Front / Prompt -->
+            <div class="review-front mb-4">
+                <h4 class="fw-bold text-primary mb-3">{{ rev.title }}</h4>
+                {% if rev.content_payload.question and rev.content_payload.question != rev.title %}
+                <p class="text-secondary leading-relaxed">{{ rev.content_payload.question }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Reveal Button -->
+            <div class="text-center my-4" id="reveal-btn-container-{{ forloop.counter0 }}">
+                <button type="button" class="btn btn-outline-primary px-4 py-2" onclick="revealAnswer({{ forloop.counter0 }})">
+                    <i class="bi bi-eye me-1"></i> Show Answer & Solution
+                </button>
+            </div>
+
+            <!-- Back / Answer (Initially Hidden) -->
+            <div class="review-back d-none p-3 rounded mb-4" id="answer-container-{{ forloop.counter0 }}" style="background: var(--bg-surface-2); border-left: 3px solid var(--lime-500);">
+                {% if rev.content_payload.correct_answer %}
+                <div class="mb-2">
+                    <span class="text-success fw-bold small text-uppercase d-block">Correct Principle:</span>
+                    <strong class="text-primary">{{ rev.content_payload.correct_answer }}</strong>
+                </div>
+                {% endif %}
+
+                {% if rev.content_payload.explanation %}
+                <div class="mb-2">
+                    <span class="text-muted small d-block">Explanation:</span>
+                    <p class="text-secondary small mb-0">{{ rev.content_payload.explanation }}</p>
+                </div>
+                {% endif %}
+
+                {% if rev.content_payload.source %}
+                <small class="text-muted d-block mt-2 font-monospace" style="font-size: 0.75rem;">Source: {{ rev.content_payload.source }}</small>
+                {% endif %}
+            </div>
+
+            <!-- Confidence Rating Buttons (Revealed after seeing answer) -->
+            <div class="confidence-bar d-none pt-3 border-top border-subtle" id="confidence-bar-{{ forloop.counter0 }}">
+                <span class="text-secondary small d-block text-center mb-2">How well did you recall this concept?</span>
+                <div class="row g-2">
+                    <div class="col-3">
+                        <button type="button" class="btn btn-outline-danger w-100 btn-sm py-2" onclick="rateConfidence({{ forloop.counter0 }}, {{ rev.id }}, 'again')">
+                            <strong>Again</strong>
+                            <small class="d-block text-muted">&lt;1 Day</small>
+                        </button>
+                    </div>
+                    <div class="col-3">
+                        <button type="button" class="btn btn-outline-warning w-100 btn-sm py-2" onclick="rateConfidence({{ forloop.counter0 }}, {{ rev.id }}, 'low')">
+                            <strong>Hard</strong>
+                            <small class="d-block text-muted">1 Day</small>
+                        </button>
+                    </div>
+                    <div class="col-3">
+                        <button type="button" class="btn btn-outline-primary w-100 btn-sm py-2" onclick="rateConfidence({{ forloop.counter0 }}, {{ rev.id }}, 'moderate')">
+                            <strong>Good</strong>
+                            <small class="d-block text-muted">3 Days</small>
+                        </button>
+                    </div>
+                    <div class="col-3">
+                        <button type="button" class="btn btn-outline-success w-100 btn-sm py-2" onclick="rateConfidence({{ forloop.counter0 }}, {{ rev.id }}, 'high')">
+                            <strong>Easy</strong>
+                            <small class="d-block text-muted">7+ Days</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Completion Screen (Shown when all cards reviewed) -->
+    <div id="completion-screen" class="card-box text-center py-5 d-none">
+        <div class="mb-3" style="color: var(--lime-500); font-size: 3.5rem;">
+            <i class="bi bi-trophy-fill"></i>
+        </div>
+        <h3 class="fw-bold mb-2">Revision Session Complete!</h3>
+        <p class="text-secondary small mb-4">
+            You reviewed all {{ total_items }} scheduled concepts today. Your study streak has been logged!
+        </p>
+        <div class="d-flex justify-content-center gap-2">
+            <a href="{% url 'revision_today' %}" class="btn btn-primary">
+                <i class="bi bi-calendar2-check me-1"></i> Return to Revision Dashboard
+            </a>
+            <a href="{% url 'student_dashboard' %}" class="btn btn-outline-secondary">
+                Dashboard HQ
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const totalItems = {{ total_items }};
+let currentIndex = 0;
+const csrfToken = "{{ csrf_token }}";
+
+function revealAnswer(index) {
+    document.getElementById(`reveal-btn-container-${index}`).classList.add("d-none");
+    document.getElementById(`answer-container-${index}`).classList.remove("d-none");
+    document.getElementById(`confidence-bar-${index}`).classList.remove("d-none");
+}
+
+function rateConfidence(index, reviewId, confidence) {
+    fetch(`/student/revision/${reviewId}/feedback/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRFToken": csrfToken,
+            "X-Requested-With": "XMLHttpRequest"
+        },
+        body: `confidence=${confidence}`
+    })
+    .then(res => res.json())
+    .then(data => {
+        advanceCard(index);
+    })
+    .catch(err => {
+        console.error(err);
+        advanceCard(index);
+    });
+}
+
+function advanceCard(index) {
+    document.getElementById(`card-${index}`).classList.add("d-none");
+    currentIndex++;
+
+    const progressPct = Math.round((currentIndex / totalItems) * 100);
+    document.getElementById("session-progress-bar").style.width = `${progressPct}%`;
+
+    if (currentIndex < totalItems) {
+        document.getElementById(`card-${currentIndex}`).classList.remove("d-none");
+        document.getElementById("current-step").textContent = currentIndex + 1;
+    } else {
+        document.getElementById("deck-container").classList.add("d-none");
+        document.getElementById("completion-screen").classList.remove("d-none");
+    }
+}
+</script>
+{% endblock %}

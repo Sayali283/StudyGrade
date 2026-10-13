@@ -193,6 +193,33 @@
                                 </a>
                             </div>
                             <div class="col-sm-6">
+                                <a href="{% url 'mistake_notebook' %}" class="action-card-btn" style="border-left: 3px solid var(--ember-500);">
+                                    <div class="action-card-icon" style="background: rgba(255, 107, 53, 0.12); color: var(--ember-500);"><i class="bi bi-journal-x"></i></div>
+                                    <div>
+                                        <div class="fw-bold">Mistake Notebook</div>
+                                        <small class="text-secondary">{% if unresolved_mistakes %}{{ unresolved_mistakes }} to fix{% else %}Review errors{% endif %}</small>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-sm-6">
+                                <a href="{% url 'revision_today' %}" class="action-card-btn action-lime" style="border-left: 3px solid var(--lime-500);">
+                                    <div class="action-card-icon" style="background: rgba(163, 230, 53, 0.12); color: var(--lime-500);"><i class="bi bi-calendar2-check"></i></div>
+                                    <div>
+                                        <div class="fw-bold">Daily Revision</div>
+                                        <small class="text-secondary">{% if due_reviews %}{{ due_reviews }} due today{% else %}All caught up{% endif %}</small>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-sm-6">
+                                <a href="{% url 'retry_quiz_setup' %}" class="action-card-btn">
+                                    <div class="action-card-icon"><i class="bi bi-arrow-repeat"></i></div>
+                                    <div>
+                                        <div class="fw-bold">Intelligent Retry</div>
+                                        <small class="text-secondary">Targeted Practice</small>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-sm-6">
                                 <a href="{% url 'pomodoro_timer' %}" class="action-card-btn action-lime">
                                     <div class="action-card-icon"><i class="bi bi-stopwatch"></i></div>
                                     <div>

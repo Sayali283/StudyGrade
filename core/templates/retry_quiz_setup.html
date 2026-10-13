@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Intelligent Retry Quiz — StudyGrade{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <span class="dashboard-eyebrow">
+                <i class="bi bi-arrow-repeat"></i> Targeted Practice
+            </span>
+            <h2 class="dashboard-title mb-1">Intelligent Retry Quiz</h2>
+            <p class="text-secondary small mb-0">Generate alternative questions testing weak concepts with plausible distractors</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'mistake_notebook' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-journal-x me-1"></i> Mistake Notebook
+            </a>
+            <a href="{% url 'quiz_home' %}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-patch-question me-1"></i> Quiz Center
+            </a>
+        </div>
+    </div>
+
+    <!-- Mode Selector Cards -->
+    <form method="POST" action="{% url 'retry_quiz_setup' %}" id="retryQuizForm">
+        {% csrf_token %}
+        <div class="row g-3 mb-4">
+            <!-- Mode 1: Quick Retry -->
+            <div class="col-md-4">
+                <div class="card-box p-3 h-100 mode-card {% if initial_mode == 'quick' %}border-primary selected-mode{% endif %}" style="cursor: pointer;" onclick="selectMode('quick')">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="mode" id="modeQuick" value="quick" {% if initial_mode == 'quick' %}checked{% endif %}>
+                        <label class="form-check-label fw-bold text-primary" for="modeQuick">
+                            Quick Retry (3–5 Questions)
+                        </label>
+                    </div>
+                    <p class="text-secondary small mb-2">
+                        Rapid micro-workout testing your most pressing weak spots in under 5 minutes.
+                    </p>
+                    <span class="badge bg-secondary">3–5 Questions</span>
+                </div>
+            </div>
+
+            <!-- Mode 2: Mistake Practice -->
+            <div class="col-md-4">
+                <div class="card-box p-3 h-100 mode-card {% if initial_mode == 'mistakes' %}border-primary selected-mode{% endif %}" style="cursor: pointer;" onclick="selectMode('mistakes')">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="mode" id="modeMistakes" value="mistakes" {% if initial_mode == 'mistakes' %}checked{% endif %}>
+                        <label class="form-check-label fw-bold text-primary" for="modeMistakes">
+                            Mistake Practice
+                        </label>
+                    </div>
+                    <p class="text-secondary small mb-2">
+                        Generates fresh questions specifically covering your unresolved mistakes recorded in the notebook.
+                    </p>
+                    <span class="badge bg-warning text-dark">{{ unresolved_mistakes|length }} Unresolved</span>
+                </div>
+            </div>
+
+            <!-- Mode 3: Topic Mastery -->
+            <div class="col-md-4">
+                <div class="card-box p-3 h-100 mode-card {% if initial_mode == 'topic' %}border-primary selected-mode{% endif %}" style="cursor: pointer;" onclick="selectMode('topic')">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="mode" id="modeTopic" value="topic" {% if initial_mode == 'topic' %}checked{% endif %}>
+                        <label class="form-check-label fw-bold text-primary" for="modeTopic">
+                            Topic Mastery Assessment
+                        </label>
+                    </div>
+                    <p class="text-secondary small mb-2">
+                        Comprehensive evaluation of a specific topic or uploaded document to confirm true mastery.
+                    </p>
+                    <span class="badge bg-success">Configurable Depth</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration Settings -->
+        <div class="card-box mb-4 p-4">
+            <h5 class="fw-bold mb-3 text-primary">Practice Configuration</h5>
+
+            <div class="row g-3">
+                <!-- Topic Selection -->
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold text-secondary">Target Topic or Concept</label>
+                    <select name="topic" class="form-select">
+                        <option value="">Select a topic (or practice all weak spots)</option>
+                        {% for top in distinct_topics %}
+                        <option value="{{ top }}" {% if selected_topic == top %}selected{% endif %}>{{ top }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Questions will prioritize this topic's underlying concepts.</small>
+                </div>
+
+                <!-- Number of Questions -->
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold text-secondary">Question Count</label>
+                    <select name="question_count" class="form-select" id="questionCountSelect">
+                        <option value="3">3 Questions (Rapid)</option>
+                        <option value="5" selected>5 Questions (Standard)</option>
+                        <option value="10">10 Questions (Thorough)</option>
+                        <option value="15">15 Questions (Deep Mastery)</option>
+                    </select>
+                </div>
+            </div>
+
+            {% if unresolved_mistakes %}
+            <div class="mt-4 pt-3 border-top border-subtle" id="mistakesSelectionSection">
+                <label class="form-label small fw-semibold text-secondary d-block mb-2">
+                    Include Specific Mistake Concepts (Optional)
+                </label>
+                <div class="row g-2" style="max-height: 200px; overflow-y: auto;">
+                    {% for m in unresolved_mistakes %}
+                    <div class="col-md-6">
+                        <div class="form-check p-2 rounded" style="background: var(--bg-surface-2);">
+                            <input class="form-check-input ms-0 me-2" type="checkbox" name="mistake_ids" value="{{ m.id }}" id="checkM_{{ m.id }}" {% if mistake_id|stringformat:'s' == m.id|stringformat:'s' %}checked{% endif %}>
+                            <label class="form-check-label small text-primary" for="checkM_{{ m.id }}">
+                                <strong>{{ m.topic }}:</strong> {{ m.question_text|truncatechars:70 }}
+                            </label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="mt-4 pt-3 border-top border-subtle d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <span class="text-muted small">
+                    <i class="bi bi-shield-check me-1 text-primary"></i> Questions are validated before presentation to ensure plausible distractors.
+                </span>
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-lightning-charge-fill me-1"></i> Generate & Start Practice
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectMode(mode) {
+    document.querySelectorAll(".mode-card").forEach(c => c.classList.remove("border-primary", "selected-mode"));
+    const radio = document.getElementById(`mode${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    if (radio) {
+        radio.checked = true;
+        radio.closest(".mode-card").classList.add("border-primary", "selected-mode");
+    }
+
+    const countSelect = document.getElementById("questionCountSelect");
+    if (mode === "quick") {
+        countSelect.value = "3";
+    } else if (mode === "mistakes") {
+        countSelect.value = "5";
+    } else if (mode === "topic") {
+        countSelect.value = "10";
+    }
+}
+</script>
+{% endblock %}

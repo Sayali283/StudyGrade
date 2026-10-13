@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ short_note.title }} — StudyGrade Cornell Notes{% endblock %}
+{% block title %}{{ short_note.title }} — StudyGrade Revision Guide{% endblock %}
 
 {% block content %}
 <div class="container py-3">
@@ -12,40 +12,128 @@
                 <i class="bi bi-journal-bookmark-fill"></i> Revision Suite
             </span>
             <h2 class="dashboard-title mb-1">{{ note.subject }}</h2>
-            <p class="text-secondary small mb-0">Cornell Active Recall Notes, Executive Summary & Exam Cheat Sheet</p>
+            <p class="text-secondary small mb-0">{{ short_note.title }} • Mode: {{ short_note.get_mode_display }}</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
             <a href="{% url 'student_notes' %}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left me-1"></i> Notes
             </a>
-            <a href="{% url 'note_flowchart' note.id %}" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-diagram-3 me-1"></i> Flowchart
+            <a href="{% url 'note_flowchart' note.id %}?type=mindmap" class="btn btn-outline-primary btn-sm" title="Generate Mind Map from this document">
+                <i class="bi bi-diagram-3 me-1"></i> Generate Mindmap
             </a>
-            <button type="button" class="btn btn-outline-success btn-sm" onclick="window.print();">
-                <i class="bi bi-printer me-1"></i> Print / PDF
+            <a href="{% url 'cornell_interactive_review' short_note.id %}" class="btn btn-warning text-dark btn-sm fw-semibold">
+                <i class="bi bi-lightning-charge-fill me-1"></i> Interactive Cornell Study
+            </a>
+            <form method="POST" action="{% url 'create_flashcards_from_cues' short_note.id %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-success btn-sm" title="Convert cues into Flashcards">
+                    <i class="bi bi-stack me-1"></i> Create Flashcards
+                </button>
+            </form>
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editNotesModal">
+                <i class="bi bi-pencil me-1"></i> Edit
             </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-copy-notes">
-                <i class="bi bi-clipboard me-1"></i> Copy All
-            </button>
-            <a href="{% url 'note_shortnotes' note.id %}?refresh=1" 
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-three-dots"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow">
+                    <li><button class="dropdown-item" onclick="window.print();"><i class="bi bi-printer me-2"></i>Print / Save PDF</button></li>
+                    <li><button class="dropdown-item" id="btn-copy-notes"><i class="bi bi-clipboard me-2"></i>Copy All Notes</button></li>
+                    {% if versions %}
+                    <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#notesVersionsModal"><i class="bi bi-clock-history me-2"></i>Snapshot History ({{ versions|length }})</button></li>
+                    {% endif %}
+                    <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#shareNoteModal"><i class="bi bi-share me-2"></i>Share Link</button></li>
+                </ul>
+            </div>
+            <a href="{% url 'note_shortnotes' note.id %}?mode={{ current_mode }}&length={{ current_length }}&level={{ current_level }}&refresh=1" 
                class="btn btn-outline-warning btn-sm"
-               onclick="return confirm('Re-analyze this document with AI to refresh notes and mnemonics?');">
+               onclick="return confirm('Re-analyze this document with AI to refresh notes and mnemonics? Manual edits will be preserved as a previous version snapshot.');">
                 <i class="bi bi-arrow-clockwise me-1"></i> Re-generate
             </a>
         </div>
     </div>
 
+    <!-- Mode & Length Controls Toolbar -->
+    <div class="card-box mb-4 p-3 d-print-none">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <!-- 7 Note Generation Modes -->
+            <div class="d-flex align-items-center gap-1 flex-wrap">
+                <span class="text-secondary small fw-bold me-1">Mode:</span>
+                <div class="btn-group btn-group-sm" role="group">
+                    <a href="{% url 'note_shortnotes' note.id %}?mode=cornell&length={{ current_length }}&level={{ current_level }}"
+                       class="btn {% if current_mode == 'cornell' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                        Cornell Notes
+                    </a>
+                    <a href="{% url 'note_shortnotes' note.id %}?mode=quick&length={{ current_length }}&level={{ current_level }}"
+                       class="btn {% if current_mode == 'quick' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                        Quick Revision
+                    </a>
+                    <a href="{% url 'note_shortnotes' note.id %}?mode=exam&length={{ current_length }}&level={{ current_level }}"
+                       class="btn {% if current_mode == 'exam' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                        Exam Prep
+                    </a>
+                    <a href="{% url 'note_shortnotes' note.id %}?mode=cheatsheet&length={{ current_length }}&level={{ current_level }}"
+                       class="btn {% if current_mode == 'cheatsheet' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                        Cheat Sheet
+                    </a>
+                    <a href="{% url 'note_shortnotes' note.id %}?mode=beginner&length={{ current_length }}&level={{ current_level }}"
+                       class="btn {% if current_mode == 'beginner' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                        Beginner
+                    </a>
+                    <a href="{% url 'note_shortnotes' note.id %}?mode=interview&length={{ current_length }}&level={{ current_level }}"
+                       class="btn {% if current_mode == 'interview' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                        Interview
+                    </a>
+                    <a href="{% url 'note_shortnotes' note.id %}?mode=custom&length={{ current_length }}&level={{ current_level }}"
+                       class="btn {% if current_mode == 'custom' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                        Custom
+                    </a>
+                </div>
+            </div>
+
+            <!-- Length & Level Dropdowns -->
+            <div class="d-flex align-items-center gap-2">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Length: {{ current_length|title }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li><a class="dropdown-item {% if current_length == 'very_short' %}active{% endif %}" href="{% url 'note_shortnotes' note.id %}?mode={{ current_mode }}&length=very_short&level={{ current_level }}">Very Short</a></li>
+                        <li><a class="dropdown-item {% if current_length == 'short' %}active{% endif %}" href="{% url 'note_shortnotes' note.id %}?mode={{ current_mode }}&length=short&level={{ current_level }}">Short</a></li>
+                        <li><a class="dropdown-item {% if current_length == 'detailed' %}active{% endif %}" href="{% url 'note_shortnotes' note.id %}?mode={{ current_mode }}&length=detailed&level={{ current_level }}">Detailed</a></li>
+                        <li><a class="dropdown-item {% if current_length == 'comprehensive' %}active{% endif %}" href="{% url 'note_shortnotes' note.id %}?mode={{ current_mode }}&length=comprehensive&level={{ current_level }}">Comprehensive</a></li>
+                    </ul>
+                </div>
+
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Level: {{ current_level|title }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li><a class="dropdown-item {% if current_level == 'beginner' %}active{% endif %}" href="{% url 'note_shortnotes' note.id %}?mode={{ current_mode }}&length={{ current_length }}&level=beginner">Beginner</a></li>
+                        <li><a class="dropdown-item {% if current_level == 'intermediate' %}active{% endif %}" href="{% url 'note_shortnotes' note.id %}?mode={{ current_mode }}&length={{ current_length }}&level=intermediate">Intermediate</a></li>
+                        <li><a class="dropdown-item {% if current_level == 'advanced' %}active{% endif %}" href="{% url 'note_shortnotes' note.id %}?mode={{ current_mode }}&length={{ current_length }}&level=advanced">Advanced</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Printable Header (Visible only on print) -->
     <div class="d-none d-print-block mb-4 text-center border-bottom pb-3">
-        <h1 class="h3 fw-bold">{{ note.subject }}</h1>
+        <h1 class="h3 fw-bold">{{ note.subject }} — {{ short_note.title }}</h1>
         <p class="text-muted small">StudyGrade Active Recall Revision Sheet • Created for {{ request.user.username }}</p>
     </div>
 
     <!-- 1. Executive Summary Box -->
     <div class="card-box mb-4" style="border-left: 4px solid var(--ember-500);">
-        <div class="d-flex align-items-center gap-2 mb-2">
-            <i class="bi bi-stars" style="color: var(--ember-500); font-size: 1.25rem;"></i>
-            <h4 class="h5 fw-bold mb-0 text-primary">Executive Summary & High-Yield Core</h4>
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-stars" style="color: var(--ember-500); font-size: 1.25rem;"></i>
+                <h4 class="h5 fw-bold mb-0 text-primary">Executive Summary & High-Yield Core</h4>
+            </div>
+            <span class="badge bg-secondary">{{ short_note.get_length_option_display }}</span>
         </div>
         <p class="text-secondary mb-0 leading-relaxed" style="font-size: 1.05rem; line-height: 1.6;">
             {{ short_note.executive_summary }}
@@ -59,14 +147,18 @@
                 <i class="bi bi-columns-gap" style="color: var(--lime-500);"></i>
                 <h5 class="fw-bold mb-0">Cornell Active Recall System</h5>
             </div>
-            <span class="badge bg-secondary">Cues vs. In-depth Notes</span>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{% url 'cornell_interactive_review' short_note.id %}" class="btn btn-primary btn-sm py-0 px-2" style="font-size: 0.8rem;">
+                    <i class="bi bi-play-circle me-1"></i> Test Recall on These Cues
+                </a>
+            </div>
         </div>
 
         <div class="row g-0">
             <!-- Left Column: Cues & Self-Testing Questions (35%) -->
             <div class="col-md-4 border-end p-4" style="background: rgba(255, 107, 53, 0.03);">
                 <h6 class="text-uppercase fw-bold text-secondary mb-3" style="letter-spacing: 0.06em; font-size: 0.8rem;">
-                    <i class="bi bi-question-circle me-1" style="color: var(--ember-500);"></i> Cues & Inquiry Prompts
+                    <i class="bi bi-question-circle me-1" style="color: var(--ember-500);"></i> Cues & Self-Testing Prompts
                 </h6>
                 <div class="d-flex flex-column gap-4">
                     {% for item in short_note.cornell_cues %}
@@ -82,7 +174,7 @@
             <!-- Right Column: Detailed Factual Notes (65%) -->
             <div class="col-md-8 p-4">
                 <h6 class="text-uppercase fw-bold text-secondary mb-3" style="letter-spacing: 0.06em; font-size: 0.8rem;">
-                    <i class="bi bi-card-text me-1" style="color: var(--lime-500);"></i> Master Notes & Key Points
+                    <i class="bi bi-card-text me-1" style="color: var(--lime-500);"></i> Master Notes & Factual Points
                 </h6>
                 <div class="d-flex flex-column gap-4">
                     {% for item in short_note.cornell_cues %}
@@ -99,6 +191,17 @@
         </div>
     </div>
 
+    <!-- Personal Annotations Box (PART 5.5) -->
+    {% if short_note.personal_notes %}
+    <div class="card-box mb-4 p-3" style="border-left: 4px solid var(--lime-500);">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-sticky-fill text-warning"></i>
+            <h6 class="fw-bold mb-0 text-primary">Personal Annotations & Highlights</h6>
+        </div>
+        <p class="text-secondary small mb-0">{{ short_note.personal_notes }}</p>
+    </div>
+    {% endif %}
+
     <div class="row g-4">
         <!-- 3. Key Definition Bank -->
         <div class="col-lg-6">
@@ -107,7 +210,7 @@
                     <h5 class="fw-bold mb-0 text-primary">
                         <i class="bi bi-book-half me-2" style="color: var(--lime-500);"></i> High-Yield Definitions
                     </h5>
-                    <span class="badge bg-success">{{ short_note.key_definitions|length }} Terms</span>
+                    <span class="badge bg-success">{{ short_note.key_definitions|length }} Verified Terms</span>
                 </div>
 
                 <div class="d-flex flex-column gap-3">
@@ -119,7 +222,7 @@
                         <p class="text-secondary small mb-0 mt-2">{{ defn.definition }}</p>
                     </div>
                     {% empty %}
-                    <p class="text-muted small">No terms extracted.</p>
+                    <p class="text-muted small">No specific definitions extracted.</p>
                     {% endfor %}
                 </div>
             </div>
@@ -132,7 +235,7 @@
                     <h5 class="fw-bold mb-0 text-primary">
                         <i class="bi bi-lightbulb-fill me-2" style="color: var(--ember-500);"></i> Memory Mnemonics
                     </h5>
-                    <span class="badge bg-warning text-dark">Recall Tricks</span>
+                    <span class="badge bg-warning text-dark">Recall Formulas</span>
                 </div>
 
                 <div class="d-flex flex-column gap-3">
@@ -152,16 +255,116 @@
         </div>
     </div>
 </div>
+
+<!-- Modal 1: Edit Notes Safely (PART 5.5) -->
+<div class="modal fade" id="editNotesModal" tabindex="-1" aria-labelledby="editNotesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);">
+            <div class="modal-header border-subtle">
+                <h5 class="modal-title fw-bold" id="editNotesModalLabel">
+                    <i class="bi bi-pencil-square me-2" style="color: var(--lime-500);"></i> Edit Revision Notes
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Note Title</label>
+                    <input type="text" class="form-control form-control-sm" id="edit-note-title" value="{{ short_note.title }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Executive Summary</label>
+                    <textarea class="form-control small" id="edit-note-summary" rows="4">{{ short_note.executive_summary }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Personal Annotations & Highlights</label>
+                    <textarea class="form-control small" id="edit-personal-notes" rows="3" placeholder="Add your own personal exam hints or memory triggers here...">{{ short_note.personal_notes }}</textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-subtle">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" id="btn-save-note-edits">
+                    <i class="bi bi-check2-circle me-1"></i> Save Changes & Snapshot
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 2: Snapshot Versions (PART 5.5) -->
+{% if versions %}
+<div class="modal fade" id="notesVersionsModal" tabindex="-1" aria-labelledby="notesVersionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);">
+            <div class="modal-header border-subtle">
+                <h5 class="modal-title fw-bold" id="notesVersionsModalLabel">
+                    <i class="bi bi-clock-history me-2 text-primary"></i> Snapshot History
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for ver in versions %}
+                    <div class="list-group-item d-flex align-items-center justify-content-between p-3" style="background: transparent; color: inherit; border-color: var(--border-color);">
+                        <div>
+                            <strong class="d-block small text-primary">{{ ver.title }}</strong>
+                            <span class="text-muted small">Saved {{ ver.created_at|date:"M d, H:i" }}</span>
+                        </div>
+                        <form method="POST" action="{% url 'restore_shortnotes_version' short_note.id ver.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-warning btn-sm py-0 px-2" onclick="return confirm('Restore this snapshot?');">
+                                Restore
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Modal 3: Share Note (PART 5.8) -->
+<div class="modal fade" id="shareNoteModal" tabindex="-1" aria-labelledby="shareNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);">
+            <div class="modal-header border-subtle">
+                <h5 class="modal-title fw-bold" id="shareNoteModalLabel">
+                    <i class="bi bi-share me-2 text-primary"></i> Explicit Note Sharing
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-secondary mb-3">
+                    Your notes are private by default. Generating a share link creates a secret token that allows read-only viewing. You can revoke it at any time.
+                </p>
+                <div class="mb-3">
+                    <button type="button" class="btn btn-primary btn-sm" id="btn-toggle-share">
+                        {% if short_note.share_token %}Revoke Shared Link{% else %}Create Shareable Link{% endif %}
+                    </button>
+                </div>
+                <div class="mb-2 {% if not short_note.share_token %}d-none{% endif %}" id="share-url-container">
+                    <label class="form-label small fw-semibold text-secondary">Share URL</label>
+                    <input type="text" class="form-control form-control-sm font-monospace" id="share-url-input" readonly value="{% if short_note.share_token %}{{ request.scheme }}://{{ request.get_host }}/notes/shared/{{ short_note.share_token }}/{% endif %}">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const btnCopy = document.getElementById("btn-copy-notes");
-        if (btnCopy) {
-            btnCopy.addEventListener("click", function() {
-                const text = `STUDYGRADE CORNELL NOTES: {{ note.subject|escapejs }}
-                
+document.addEventListener("DOMContentLoaded", function() {
+    const csrfToken = "{{ csrf_token }}";
+    const shortNoteId = {{ short_note.id }};
+
+    // Copy notes text
+    const btnCopy = document.getElementById("btn-copy-notes");
+    if (btnCopy) {
+        btnCopy.addEventListener("click", function() {
+            const text = `STUDYGRADE REVISION NOTES: {{ note.subject|escapejs }}
+            
 EXECUTIVE SUMMARY:
 {{ short_note.executive_summary|escapejs }}
 
@@ -169,16 +372,71 @@ DEFINITIONS:
 {% for d in short_note.key_definitions %}- {{ d.term|escapejs }}: {{ d.definition|escapejs }}
 {% endfor %}
 
+CUES & NOTES:
+{% for item in short_note.cornell_cues %}Q: {{ item.cue|escapejs }}
+A: {{ item.note|escapejs }}
+{% endfor %}
+
 MNEMONICS:
 {% for m in short_note.mnemonics %}- [{{ m.mnemonic|escapejs }}] {{ m.concept|escapejs }}: {{ m.explanation|escapejs }}
 {% endfor %}`;
 
-                navigator.clipboard.writeText(text).then(() => {
-                    btnCopy.innerHTML = '<i class="bi bi-check2"></i> Copied!';
-                    setTimeout(() => { btnCopy.innerHTML = '<i class="bi bi-clipboard me-1"></i> Copy All'; }, 2000);
-                });
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Revision notes copied to clipboard!");
             });
-        }
-    });
+        });
+    }
+
+    // Save note edits
+    const btnSaveEdits = document.getElementById("btn-save-note-edits");
+    if (btnSaveEdits) {
+        btnSaveEdits.addEventListener("click", function() {
+            const title = document.getElementById("edit-note-title").value.trim();
+            const summary = document.getElementById("edit-note-summary").value.trim();
+            const personal = document.getElementById("edit-personal-notes").value.trim();
+
+            fetch(`/student/notes/${shortNoteId}/edit/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: `title=${encodeURIComponent(title)}&executive_summary=${encodeURIComponent(summary)}&personal_notes=${encodeURIComponent(personal)}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert("Error saving notes: " + (data.error || "Unknown error"));
+                }
+            });
+        });
+    }
+
+    // Toggle note sharing
+    const btnShare = document.getElementById("btn-toggle-share");
+    if (btnShare) {
+        btnShare.addEventListener("click", function() {
+            const hasToken = "{{ short_note.share_token }}" !== "";
+            const action = hasToken ? "revoke" : "share";
+
+            fetch(`/student/notes/${shortNoteId}/share/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: `action=${action}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                window.location.reload();
+            });
+        });
+    }
+});
 </script>
 {% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Diagram Quiz Results — StudyGrade{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 760px;">
+    <!-- Results Card -->
+    <div class="card-box p-4 text-center mb-4">
+        <div class="mb-3" style="color: {% if score_pct >= 70 %}var(--lime-500){% else %}var(--ember-500){% endif %}; font-size: 3rem;">
+            <i class="bi {% if score_pct >= 70 %}bi-patch-check-fill{% else %}bi-exclamation-circle-fill{% endif %}"></i>
+        </div>
+        <h3 class="fw-bold mb-1">Diagram Verification Complete</h3>
+        <p class="text-secondary small mb-3">{{ chart.title }}</p>
+
+        <div class="display-4 fw-bold mb-2 text-primary">{{ score_pct }}%</div>
+        <p class="text-secondary mb-4">
+            You answered <strong>{{ correct_count }}</strong> out of <strong>{{ total }}</strong> diagram concept questions correctly.
+        </p>
+
+        <div class="d-flex justify-content-center gap-2 flex-wrap">
+            <a href="{% url 'note_flowchart' chart.note_id %}?type={{ chart.diagram_type }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-diagram-3 me-1"></i> Back to Diagram
+            </a>
+            {% if mistakes_created %}
+            <a href="{% url 'mistake_notebook' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-journal-x me-1"></i> Review Mistakes in Notebook ({{ mistakes_created|length }})
+            </a>
+            {% endif %}
+            <a href="{% url 'revision_today' %}" class="btn btn-outline-success btn-sm">
+                <i class="bi bi-calendar2-check me-1"></i> Today's Revision
+            </a>
+        </div>
+    </div>
+
+    {% if mistakes_created %}
+    <div class="card-box p-4">
+        <h6 class="fw-bold text-danger mb-3">
+            <i class="bi bi-arrow-repeat me-1"></i> Missed Concepts Added to Mistake Notebook:
+        </h6>
+        <div class="d-flex flex-column gap-2">
+            {% for m in mistakes_created %}
+            <div class="p-3 rounded border" style="background: var(--bg-surface-2);">
+                <span class="badge bg-danger text-uppercase mb-1">{{ m.topic }}</span>
+                <p class="text-primary fw-medium small mb-1">{{ m.question_text }}</p>
+                <div class="text-success small">Verified Principle: {{ m.correct_answer }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
