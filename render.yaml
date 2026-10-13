@@ -4,8 +4,11 @@ services:
     runtime: python
     plan: free
     buildCommand: "./build.sh"
+    preDeployCommand: "python manage.py migrate"
     startCommand: "gunicorn smartstudy.wsgi:application"
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.13.2"
       - key: DEBUG
         value: "False"
       - key: SECRET_KEY

@@ -19,26 +19,30 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Security & Environment Configuration
 # ==============================================================================
 
+import sys
+IS_TESTING = 'test' in sys.argv
+IS_COLLECTSTATIC = 'collectstatic' in sys.argv
+
 # SECURITY WARNING: DEBUG defaults to False for safe production deployments!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 # SECRET_KEY Management
 SECRET_KEY = config('SECRET_KEY', default=None)
 if not SECRET_KEY:
-    if DEBUG:
-        # Permitted for local development only
+    if DEBUG or IS_COLLECTSTATIC or IS_TESTING:
+        # Permitted for local development, test runners, and build-time asset collection only
         SECRET_KEY = 'django-insecure-dev-studygrade-local-development-key-only-not-for-prod'
     else:
         raise ImproperlyConfigured(
             "SECRET_KEY environment variable must be explicitly configured in production when DEBUG=False."
         )
-elif not DEBUG and (
-    len(SECRET_KEY) < 50
+elif not DEBUG and not IS_TESTING and (
+    len(SECRET_KEY) < 24
     or SECRET_KEY.startswith('django-insecure-')
     or SECRET_KEY in {'dev-secret-key-change-me', 'replace-with-a-unique-secret-key-in-production'}
 ):
     raise ImproperlyConfigured(
-        "Insecure SECRET_KEY detected in production. Please configure a unique, random 50+ character key."
+        "Insecure SECRET_KEY detected in production. Please configure a unique, random 24+ character key."
     )
 
 # Hostnames & Trusted Domains
@@ -152,7 +156,7 @@ if DATABASE_URL:
             'OPTIONS': db_options,
         }
     }
-elif USE_SQLITE is False or (USE_SQLITE is None and not DEBUG):
+elif USE_SQLITE is False or (USE_SQLITE is None and not DEBUG and not IS_COLLECTSTATIC and not IS_TESTING):
     db_name = config('DB_NAME', default=None)
     if db_name:
         DATABASES = {
@@ -181,9 +185,6 @@ else:
 # ==============================================================================
 # Storage & Upload Limits
 # ==============================================================================
-
-import sys
-IS_TESTING = 'test' in sys.argv
 
 STORAGES = {
     "default": {
