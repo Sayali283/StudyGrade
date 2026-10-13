@@ -6,3 +6,5 @@ python-decouple==3.8
 PyPDF2==3.0.1
 nltk==3.9.1
 google-genai==1.75.0
+django-storages==1.14.6
+boto3==1.43.112

@@ -64,7 +64,7 @@ def generate_flashcards(request, note_id):
     note = get_object_or_404(Notes, id=note_id, student=student)
 
     try:
-        text = extract_document_text(note.file.path)
+        text = extract_document_text(note.file)
     except Exception as error:
         dj_messages.error(request, str(error))
         return redirect("flashcard_home")

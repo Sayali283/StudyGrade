@@ -28,6 +28,7 @@ from .quiz_views import (
     take_quiz,
     submit_quiz,
     view_quiz_result,
+    report_question,
 )
 from .flashcard_views import (
     flashcard_home,
@@ -59,6 +60,7 @@ __all__ = [
     "take_quiz",
     "submit_quiz",
     "view_quiz_result",
+    "report_question",
     "flashcard_home",
     "generate_flashcards",
     "study_flashcards",
@@ -69,3 +71,4 @@ __all__ = [
     "parent_dashboard",
     "student_progress",
 ]
+

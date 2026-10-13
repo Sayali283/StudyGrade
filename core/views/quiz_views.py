@@ -52,7 +52,7 @@ def generate_quiz(request, note_id):
     note = get_object_or_404(Notes, id=note_id, student=student)
 
     try:
-        text = extract_document_text(note.file.path)
+        text = extract_document_text(note.file)
     except Exception as error:
         dj_messages.error(request, str(error))
         return redirect("quiz_home")
@@ -78,6 +78,9 @@ def generate_quiz(request, note_id):
             option_c=item["options"][2],
             option_d=item["options"][3],
             correct_answer=item["answer"],
+            explanation=item.get("explanation", ""),
+            difficulty=item.get("difficulty", "medium"),
+            source_reference=item.get("source_reference", ""),
         )
         for item in questions_data
     ])
@@ -138,10 +141,13 @@ def submit_quiz(request, quiz_id):
 
 @login_required
 def view_quiz_result(request, quiz_id):
-    """Displays answers and score for a previously completed quiz."""
+    """Displays answers and score for a previously completed quiz with student & parent access."""
     student = Student.objects.filter(user=request.user).first()
     if student is None:
-        return redirect("login")
+        if hasattr(request.user, "parent"):
+            student = request.user.parent.student
+        else:
+            return redirect("login")
 
     quiz = get_object_or_404(Quiz, id=quiz_id, student=student)
 
@@ -165,3 +171,33 @@ def view_quiz_result(request, quiz_id):
         "total": total,
         "history_scores": history_scores,
     })
+
+
+@login_required
+@require_POST
+def report_question(request, question_id):
+    """Allows student to submit feedback or report an issue on a generated question."""
+    from core.models import QuestionReport
+    student = Student.objects.filter(user=request.user).first()
+    if student is None:
+        return redirect("login")
+
+    question = get_object_or_404(Question, id=question_id)
+    if question.quiz.student != student and not (
+        hasattr(request.user, "parent") and request.user.parent.student == question.quiz.student
+    ):
+        return redirect("quiz_home")
+
+    reason = (request.POST.get("reason") or "").strip()
+    if reason:
+        QuestionReport.objects.create(
+            question=question,
+            student=student,
+            reason=reason[:1000],
+        )
+        dj_messages.success(request, "Thank you! Your feedback on this question has been recorded.")
+    else:
+        dj_messages.error(request, "Please specify a reason when reporting a question.")
+
+    return redirect("view_quiz_result", quiz_id=question.quiz.id)
+

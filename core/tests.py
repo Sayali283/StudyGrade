@@ -477,4 +477,268 @@ class ApiAndServiceLayerTests(TestCase):
 		self.assertEqual(data["data"]["notes"][0]["subject"], "Computer Networks")
 
 
+class ProductionSecurityAndConfigurationTests(TestCase):
+	def test_debug_defaults_to_false_in_production(self):
+		from django.conf import settings
+		# In this test environment with our updated settings, verify DEBUG is not True by default
+		# unless explicitly overridden.
+		self.assertFalse(settings.DEBUG)
+
+	def test_anonymous_user_redirected_from_all_protected_views(self):
+		protected_urls = [
+			reverse("student_dashboard"),
+			reverse("student_notes"),
+			reverse("quiz_home"),
+			reverse("flashcard_home"),
+			reverse("pomodoro_timer"),
+			reverse("student_progress"),
+		]
+		for url in protected_urls:
+			response = self.client.get(url)
+			self.assertEqual(response.status_code, 302, f"URL {url} did not redirect anonymous user.")
+			self.assertIn("/login", response.url)
+
+	def test_student_cannot_view_another_student_quiz_result(self):
+		user_a = User.objects.create_user(username="student_a@test.com", password="pass")
+		student_a = Student.objects.create(user=user_a, class_semester="BCA")
+		quiz_a = Quiz.objects.create(student=student_a, subject="History")
+
+		user_b = User.objects.create_user(username="student_b@test.com", password="pass")
+		Student.objects.create(user=user_b, class_semester="BCA")
+
+		self.client.force_login(user_b)
+		response = self.client.get(reverse("view_quiz_result", args=[quiz_a.id]))
+		self.assertEqual(response.status_code, 404)
+
+	def test_parent_authorization_for_quiz_results(self):
+		student_user = User.objects.create_user(username="child@test.com", password="pass")
+		student = Student.objects.create(user=student_user, class_semester="BCA")
+		quiz = Quiz.objects.create(student=student, subject="Math")
+
+		linked_parent_user = User.objects.create_user(username="parent_linked@test.com", password="pass")
+		Parent.objects.create(user=linked_parent_user, student=student)
+
+		other_student_user = User.objects.create_user(username="other_child@test.com", password="pass")
+		other_student = Student.objects.create(user=other_student_user, class_semester="BCA")
+		unlinked_parent_user = User.objects.create_user(username="parent_unlinked@test.com", password="pass")
+		Parent.objects.create(user=unlinked_parent_user, student=other_student)
+
+		# Linked parent can view
+		self.client.force_login(linked_parent_user)
+		response = self.client.get(reverse("view_quiz_result", args=[quiz.id]))
+		self.assertEqual(response.status_code, 200)
+
+		# Unlinked parent receives 404
+		self.client.force_login(unlinked_parent_user)
+		response = self.client.get(reverse("view_quiz_result", args=[quiz.id]))
+		self.assertEqual(response.status_code, 404)
+
+
+class UploadValidationAndStorageQuotaTests(TestCase):
+	def setUp(self):
+		self.media_directory = tempfile.TemporaryDirectory()
+		self.addCleanup(self.media_directory.cleanup)
+		media_settings = override_settings(MEDIA_ROOT=self.media_directory.name)
+		media_settings.enable()
+		self.addCleanup(media_settings.disable)
+
+		self.user = User.objects.create_user(username="upload_student@test.com", password="pass")
+		self.student = Student.objects.create(user=self.user, class_semester="BCA")
+		self.client.force_login(self.user)
+
+	def test_valid_text_upload_succeeds(self):
+		valid_content = b"This is a valid educational study note containing sufficient text content to pass all validation checks."
+		uploaded_file = SimpleUploadedFile("study_notes.txt", valid_content, content_type="text/plain")
+		response = self.client.post(reverse("student_notes"), {
+			"subject": "Physics",
+			"file": uploaded_file,
+		})
+		self.assertRedirects(response, reverse("student_notes"))
+		self.assertTrue(Notes.objects.filter(student=self.student, subject="Physics").exists())
+		note = Notes.objects.get(student=self.student, subject="Physics")
+		self.assertEqual(note.file_size, len(valid_content))
+		if hasattr(note.file, "close"):
+			note.file.close()
+
+	def test_unsupported_file_extension_rejected(self):
+		unsupported_file = SimpleUploadedFile("script.py", b"print('malicious code here')", content_type="text/x-python")
+		response = self.client.post(reverse("student_notes"), {
+			"subject": "Insecure File",
+			"file": unsupported_file,
+		})
+		self.assertEqual(response.status_code, 200)
+		self.assertFalse(Notes.objects.filter(student=self.student, subject="Insecure File").exists())
+		self.assertContains(response, "Unsupported file format")
+
+	def test_empty_file_rejected(self):
+		empty_file = SimpleUploadedFile("empty.txt", b"", content_type="text/plain")
+		response = self.client.post(reverse("student_notes"), {
+			"subject": "Empty Document",
+			"file": empty_file,
+		})
+		self.assertEqual(response.status_code, 200)
+		self.assertFalse(Notes.objects.filter(student=self.student, subject="Empty Document").exists())
+		self.assertContains(response, "file is empty")
+
+	def test_oversized_file_rejected(self):
+		with override_settings(MAX_UPLOAD_SIZE_BYTES=100):
+			big_file = SimpleUploadedFile("big.txt", b"A" * 200, content_type="text/plain")
+			response = self.client.post(reverse("student_notes"), {
+				"subject": "Oversized",
+				"file": big_file,
+			})
+			self.assertEqual(response.status_code, 200)
+			self.assertFalse(Notes.objects.filter(student=self.student, subject="Oversized").exists())
+			self.assertContains(response, "exceeds the maximum allowed size")
+
+	def test_corrupted_pdf_rejected(self):
+		bad_pdf = SimpleUploadedFile("corrupt.pdf", b"%PDF-1.4\ncorrupted content that cannot be parsed by pypdf", content_type="application/pdf")
+		response = self.client.post(reverse("student_notes"), {
+			"subject": "Corrupt Note",
+			"file": bad_pdf,
+		})
+		self.assertEqual(response.status_code, 200)
+		self.assertFalse(Notes.objects.filter(student=self.student, subject="Corrupt Note").exists())
+
+	def test_per_user_storage_quota_enforced(self):
+		with override_settings(MAX_USER_STORAGE_BYTES=160):
+			content1 = b"First note with enough valid words to pass validation cleanly and successfully."
+			file1 = SimpleUploadedFile("n1.txt", content1, content_type="text/plain")
+			self.client.post(reverse("student_notes"), {"subject": "Note 1", "file": file1})
+			self.assertEqual(Notes.objects.filter(student=self.student).count(), 1)
+
+			# Second upload that pushes student total over 160 bytes
+			content2 = b"Second note with more content words pushing storage above limits." * 3
+			file2 = SimpleUploadedFile("n2.txt", content2, content_type="text/plain")
+			response = self.client.post(reverse("student_notes"), {"subject": "Note 2", "file": file2})
+			self.assertEqual(response.status_code, 200)
+			self.assertContains(response, "Storage quota exceeded")
+			self.assertEqual(Notes.objects.filter(student=self.student).count(), 1)
+
+	def test_deleting_note_cleans_up_file_without_affecting_other_students(self):
+		other_user = User.objects.create_user(username="other_up@test.com", password="pass")
+		other_student = Student.objects.create(user=other_user, class_semester="BCA")
+
+		note1 = Notes.objects.create(
+			student=self.student,
+			subject="Student 1 Note",
+			file=SimpleUploadedFile("s1.txt", b"Student 1 notes text content here."),
+			file_size=35,
+		)
+		note2 = Notes.objects.create(
+			student=other_student,
+			subject="Student 2 Note",
+			file=SimpleUploadedFile("s2.txt", b"Student 2 notes text content here."),
+			file_size=35,
+		)
+		file1_storage = note1.file.storage
+		file1_name = note1.file.name
+		file2_name = note2.file.name
+
+		self.assertTrue(file1_storage.exists(file1_name))
+		self.assertTrue(file1_storage.exists(file2_name))
+
+		# Delete note 1
+		response = self.client.get(reverse("delete_note", args=[note1.id]))
+		self.assertRedirects(response, reverse("student_notes"))
+		self.assertFalse(file1_storage.exists(file1_name))
+		self.assertTrue(file1_storage.exists(file2_name))
+
+
+class AIGenerationReliabilityTests(TestCase):
+	def setUp(self):
+		self.media_directory = tempfile.TemporaryDirectory()
+		self.addCleanup(self.media_directory.cleanup)
+		media_settings = override_settings(MEDIA_ROOT=self.media_directory.name)
+		media_settings.enable()
+		self.addCleanup(media_settings.disable)
+
+		self.user = User.objects.create_user(username="ai_student@test.com", password="pass")
+		self.student = Student.objects.create(user=self.user, class_semester="BCA")
+		self.note = Notes.objects.create(
+			student=self.student,
+			subject="Astronomy",
+			file=SimpleUploadedFile(
+				"astronomy.txt",
+				(
+					"The solar system consists of eight major planets orbiting the central Sun. "
+					"Jupiter is the largest planet in our solar system with immense gravitational force. "
+					"Mars is commonly known as the Red Planet due to iron oxide minerals on its surface. "
+					"Venus possesses an extremely dense carbon dioxide atmosphere with runaway greenhouse warming. "
+					"Saturn has prominent reflective planetary rings composed primarily of water ice chunks."
+				).encode(),
+			),
+		)
+		self.client.force_login(self.user)
+
+	@patch("core.views.genai.Client")
+	def test_malformed_json_falls_back_to_nlp_cleanly(self, gemini_client):
+		gemini_client.return_value.models.generate_content.return_value = SimpleNamespace(
+			text="```json [{\"question\": \"Incomplete JSON...",
+		)
+		response = self.client.post(
+			reverse("generate_quiz", args=[self.note.id]),
+			{"question_count": "5"},
+		)
+		self.assertEqual(response.status_code, 302)
+		quiz = Quiz.objects.get(student=self.student)
+		questions = Question.objects.filter(quiz=quiz)
+		self.assertGreaterEqual(questions.count(), 1)
+		for q in questions:
+			self.assertEqual(len(set([q.option_a, q.option_b, q.option_c, q.option_d])), 4)
+			self.assertIn(q.correct_answer, [q.option_a, q.option_b, q.option_c, q.option_d])
+
+	@patch("core.views.genai.Client")
+	def test_quarantines_invalid_answers_and_missing_options(self, gemini_client):
+		# First item has only 2 options; second item has answer not in options; third item is valid
+		gemini_client.return_value.models.generate_content.return_value = SimpleNamespace(
+			text=json.dumps([
+				{"question": "Broken options question", "options": ["A", "B"], "answer": "A"},
+				{"question": "Mismatched answer question", "options": ["A", "B", "C", "D"], "answer": "Z"},
+				{
+					"question": "Which planet is largest in the solar system?",
+					"topic": "Planets",
+					"options": ["Jupiter", "Mars", "Venus", "Earth"],
+					"answer": "Jupiter",
+					"explanation": "Jupiter has the largest mass and diameter among all planets.",
+					"difficulty": "easy",
+				},
+			])
+		)
+		response = self.client.post(
+			reverse("generate_quiz", args=[self.note.id]),
+			{"question_count": "5"},
+		)
+		self.assertEqual(response.status_code, 302)
+		quiz = Quiz.objects.get(student=self.student)
+		valid_q = Question.objects.filter(quiz=quiz, question_text="Which planet is largest in the solar system?").first()
+		self.assertIsNotNone(valid_q)
+		self.assertEqual(valid_q.explanation, "Jupiter has the largest mass and diameter among all planets.")
+		self.assertEqual(valid_q.difficulty, "easy")
+		self.assertFalse(Question.objects.filter(quiz=quiz, question_text="Broken options question").exists())
+		self.assertFalse(Question.objects.filter(quiz=quiz, question_text="Mismatched answer question").exists())
+
+	def test_report_question_view_persists_feedback(self):
+		from core.models import QuestionReport
+		quiz = Quiz.objects.create(student=self.student, subject="Astronomy")
+		question = Question.objects.create(
+			quiz=quiz,
+			question_text="What is Mars?",
+			option_a="Red Planet",
+			option_b="Gas Giant",
+			option_c="Star",
+			option_d="Comet",
+			correct_answer="Red Planet",
+		)
+		response = self.client.post(
+			reverse("report_question", args=[question.id]),
+			{"reason": "Option text is too brief and could be clearer."},
+		)
+		self.assertRedirects(response, reverse("view_quiz_result", args=[quiz.id]))
+		self.assertTrue(QuestionReport.objects.filter(question=question, student=self.student).exists())
+		report = QuestionReport.objects.get(question=question)
+		self.assertIn("too brief", report.reason)
+
+
+
 

@@ -24,6 +24,7 @@ urlpatterns = [
     path('student/quiz/take/<int:quiz_id>/', views.take_quiz, name='take_quiz'),
     path('student/quiz/submit/<int:quiz_id>/', views.submit_quiz, name='submit_quiz'),
     path('student/quiz/result/<int:quiz_id>/', views.view_quiz_result, name='view_quiz_result'),
+    path('student/quiz/question/<int:question_id>/report/', views.report_question, name='report_question'),
     path('student/flashcards/', views.flashcard_home, name='flashcard_home'),
     path('student/flashcards/generate/<int:note_id>/', views.generate_flashcards, name='generate_flashcards'),
     path('student/flashcards/<int:note_id>/', views.study_flashcards, name='study_flashcards'),

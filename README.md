@@ -4,15 +4,15 @@
 ### AI-Powered Active Recall, Spaced Flashcards & Student Mastery
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-studygrade.onrender.com-00C781?style=for-the-badge&logo=render&logoColor=white)](https://studygrade.onrender.com)
-[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Django](https://img.shields.io/badge/Django-5.2-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![Python](https://img.shields.io/badge/Python-3.13+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Django](https://img.shields.io/badge/Django-6.0.5-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
-**Turn lecture notes and PDFs into AI-powered active recall quizzes, interactive flashcards, Pomodoro focus blocks, and measurable parent-visible progress.**
+**Turn lecture notes and educational documents into AI-powered active recall quizzes, interactive flashcards, Pomodoro focus blocks, and measurable parent-visible progress.**
 
-[Live Demo](https://studygrade.onrender.com) · [Features](#-core-capabilities) · [User Journeys](#-user-journeys) · [REST API](#-restful-api-v1) · [Quick Start](#-quick-start) · [Architecture](#-architecture--workflow)
+[Live Demo](https://studygrade.onrender.com) · [Features](#-core-capabilities) · [User Journeys](#-user-journeys) · [REST API](#-restful-api-v1) · [Quick Start](#-quick-start) · [Deployment](#-render-production-deployment)
 
 </div>
 
@@ -20,9 +20,9 @@
 
 ## 📖 About StudyGrade
 
-**StudyGrade** is a full-stack educational platform built with **Django** and powered by AI intelligence. It helps students transition from passive reading to active mastery. 
+**StudyGrade** is a full-stack educational mastery platform built with **Python 3.13**, **Django 6.0.5**, and modern AI models. It bridges the gap between passive reading and active comprehension by transforming raw study notes into interactive learning modules.
 
-Students can drop lecture notes (PDFs, DOCX, or text files), synthesize key learning points into multiple-choice quizzes, flip spaced-repetition flashcards, and run Pomodoro study sprints. Parents get dedicated oversight dashboards to track their student's consistency, quiz accuracy, and topic weak spots.
+Students upload course documents (PDF, DOCX, TXT, or Markdown), synthesize key concepts into custom multiple-choice quizzes, test retention with spaced digital flashcards, and run timed Pomodoro study sessions. Parents access a dedicated portal to observe their child's consistency, quiz scores, and subject mastery over time.
 
 ---
 
@@ -30,13 +30,14 @@ Students can drop lecture notes (PDFs, DOCX, or text files), synthesize key lear
 
 | | Feature | Highlights |
 |---|---|---|
-| 🤖 | **AI Quiz Synthesis** | Converts uploaded class notes and PDFs into 5 to 30 custom MCQs to test comprehension. |
-| 🗂️ | **Interactive Flashcards** | Generates front-and-back digital flashcards with flip animations and spaced study tracking. |
-| ⏱️ | **Pomodoro Focus Timer** | 25-minute deep work sprints with break cycles and automatic daily study streak incrementing. |
-| 📊 | **Topic Mastery & Analytics** | Visualizes accuracy percentages across topics and pinpoints areas needing revision. |
-| 🔐 | **Role-Based Workspaces** | Independent, authenticated portals for **Students** and linked **Parents**. |
-| 🔌 | **RESTful API (`/api/v1/`)** | Clean JSON endpoints for streak analytics, notes access, and mobile or external clients. |
-| 📱 | **Responsive Design** | Custom dark/light styling built on Bootstrap 5 with WhiteNoise compression. |
+| 🤖 | **AI Quiz Synthesis** | Generates 5 to 30 grounded MCQs with detailed explanations, difficulty tags, and citations using Gemini models (`gemini-3.5-flash-lite`, `gemini-3.8-flash`, etc.) with automatic cloze-deletion NLP fallback. |
+| 🗂️ | **Interactive Flashcards** | Generates interactive front-and-back study decks with 3D flip animations and spaced study tracking. |
+| ⏱️ | **Pomodoro Focus Studio** | 25-minute deep work intervals with break cycles and automatic daily study streak incrementing. |
+| 📊 | **Topic Mastery & Analytics** | Visualizes topic-level accuracy percentages and recommends focus areas for revision. |
+| 🔐 | **Role-Based Portals** | Isolated, secure workspaces for **Students** and linked **Parents** with server-side ownership checks. |
+| 🛡️ | **Document Security Pipeline** | Server-side validation of file signatures, encrypted PDF detection, scanned PDF OCR warning, UUID path obfuscation, and per-user storage quotas. |
+| 🔌 | **RESTful API (`/api/v1/`)** | Authenticated JSON endpoints for streaks, notes, analytics, and flashcards. |
+| 📱 | **Responsive Design** | High-contrast Obsidian & Ember design system built on Bootstrap 5.3 with WhiteNoise compression. |
 
 ---
 
@@ -45,55 +46,39 @@ Students can drop lecture notes (PDFs, DOCX, or text files), synthesize key lear
 ```mermaid
 flowchart TD
     subgraph Student["🧑‍🎓 Student Experience"]
-        A[Upload Class Notes / PDF] --> B[Generate AI Quizzes & Flashcards]
-        B --> C[Take Practice Quiz]
-        B --> D[Flip Spaced Flashcards]
-        C --> E[Instant Evaluation & Score]
-        F[Pomodoro Focus Sprints] --> G[Active Day Streaks 🔥]
+        A[Upload Notes: PDF, DOCX, TXT, MD] --> B[Security & Quota Validation]
+        B --> C[Text Extraction & Delimiter Bounding]
+        C --> D[Gemini AI MCQ Synthesis / NLP Fallback]
+        D --> E[Take Interactive Quiz]
+        E --> F[Instant Scoring & Question Explanations]
+        G[Pomodoro Sprints] --> H[Study Day Streaks 🔥]
     end
 
     subgraph DataEngine["⚙️ Data Engine & ORM"]
-        E --> H[(PostgreSQL / SQLite Database)]
-        G --> H
-        H --> I[Topic Accuracy & Trend Analytics]
+        B -.-> Storage[(Local Storage / Cloud Object Storage)]
+        F --> DB[(PostgreSQL Database)]
+        H --> DB
+        DB --> Analytics[Topic Accuracy & Trend Engine]
     end
 
     subgraph Parent["👨‍👩‍👧 Parent Experience"]
-        I --> J[Parent Dashboard]
-        J --> K[View Quiz Attempts & Accuracy Trends]
+        Analytics --> J[Parent Dashboard]
+        J --> K[View Linked Student Attempts & Scores]
         J --> L[Monitor Study Consistency]
     end
 ```
 
 ---
 
-## 🧭 User Journeys
-
-### 1. Student Workflow
-1. **Sign Up & Personalize**: Register with semester and class details.
-2. **Upload Notes**: Drop subject notes in PDF or TXT format.
-3. **Practice**:
-   - Generate active recall MCQs with customized question counts.
-   - Flip flashcards for quick revision before exams.
-4. **Focus & Streak**: Complete 25-minute Pomodoro sessions to maintain study streaks.
-5. **Analyze**: Review weak topics on the progress dashboard.
-
-### 2. Parent Workflow
-1. **Link Account**: Register a parent account by providing the registered student's email.
-2. **Monitor**: Access the parent dashboard to view:
-   - Recent quiz scores and timestamps.
-   - Overall topic accuracy rates.
-   - Daily active study streaks.
-
----
-
 ## 🔌 RESTful API (v1)
 
-StudyGrade includes standardized JSON API endpoints mounted under `/api/v1/`:
+All endpoints return a standardized JSON envelope:
+- **Success:** `{"status": "success", "message": "...", "data": {...}}`
+- **Error:** `{"status": "error", "code": "ERROR_CODE", "message": "..."}`
 
 | Method | Endpoint | Access | Purpose |
 |---|---|---|---|
-| `GET` | `/api/v1/health/` | Public | Service health probe |
+| `GET` | `/api/v1/health/` | Public | Service health probe for load balancers |
 | `GET` | `/api/v1/streak/` | Authenticated | Active student study streak count |
 | `GET` | `/api/v1/analytics/` | Authenticated | Topic accuracy and recommended review areas |
 | `POST` | `/api/v1/pomodoro/complete/` | Authenticated | Log a completed focus block |
@@ -102,18 +87,21 @@ StudyGrade includes standardized JSON API endpoints mounted under `/api/v1/`:
 
 ---
 
-## 🧰 Tech Stack
+## 🧰 Tech Stack & Compatibility
 
-- **Backend**: Python 3.11+, Django 5.2, Django ORM
+- **Backend**: Python 3.13.7, Django 6.0.5, Django ORM
 - **Database**: PostgreSQL (Production) / SQLite (Local development)
-- **Frontend**: HTML5, CSS3, Bootstrap 5.3, Bootstrap Icons, JavaScript
-- **Static Assets**: WhiteNoise storage with gzip/brotli manifest compression
-- **AI Integration**: Gemini API for intelligent note parsing and quiz generation
-- **Hosting / CI/CD**: Render, Gunicorn WSGI, GitHub Actions
+- **Security**: Python-Decouple, HSTS, Secure Cookies, CSRF Protection, Server-Side Ownership Controls
+- **File Validation & Parsing**: PyPDF2 3.0.1 (PDFs), XML/Zipfile (DOCX), Python built-ins (TXT, Markdown)
+- **Object Storage**: `django-storages` with `boto3` (AWS S3, Cloudflare R2, MinIO)
+- **AI Integration**: Google GenAI SDK (`google-genai==1.75.0`), Gemini models with multi-model fallback & cloze NLP
+- **Static Assets**: WhiteNoise with `SafeWhiteNoiseStorage` (gzip/brotli compression, lenient hash fallback)
+- **WSGI Server**: Gunicorn 23.0.0
+- **Frontend**: HTML5, CSS3, Bootstrap 5.3.3, Bootstrap Icons, Space Grotesk & Inter typography
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Local Development)
 
 ### 1. Clone the Repository
 ```bash
@@ -123,7 +111,7 @@ cd StudyGrade
 
 ### 2. Create & Activate Virtual Environment
 ```bash
-# Windows
+# Windows (PowerShell)
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 
@@ -142,57 +130,158 @@ Copy `.env.example` to `.env`:
 ```bash
 cp .env.example .env
 ```
-Fill in your settings (`SECRET_KEY`, `GEMINI_API_KEY`, etc.). For local SQLite development, no extra database configuration is required.
+For local development, the default `.env` settings enable SQLite and development keys automatically:
+- `DEBUG=True`
+- `USE_SQLITE=True`
+- `GEMINI_API_KEY=` (Optional: add your key from [Google AI Studio](https://aistudio.google.com/))
 
 ### 5. Run Migrations & Start Server
 ```bash
 python manage.py migrate
 python manage.py runserver
 ```
-
-Open **[http://127.0.0.1:8000](http://127.0.0.1:8000)** in your browser!
+Visit **[http://127.0.0.1:8000](http://127.0.0.1:8000)** in your browser!
 
 ---
 
-## 🧪 Running Tests
+## 🧪 Running Automated Tests
 
-StudyGrade features a comprehensive test suite covering authentication, quiz submission, models, and analytics:
+StudyGrade features an extensive automated test suite covering security authorization, upload validation, storage quotas, AI generation with mocking, and analytics:
 
 ```bash
 python manage.py test
 ```
 
+To run system and deployment security checks:
+```bash
+python manage.py check
+python manage.py check --deploy
+```
+
 ---
 
-## 📁 Clean Repository Structure
+## 📁 Repository Structure
 
-```
+```text
 StudyGrade/
-├── .github/workflows/   # CI automation
-├── core/                # Core Django application
-│   ├── api/             # RESTful API routing and views
-│   ├── migrations/      # Database migrations
-│   ├── services/        # Business logic (streaks, analytics)
-│   ├── templates/       # HTML templates (Django templating)
-│   └── views/           # Modular authentication, quiz, note views
-├── smartstudy/          # Project configuration (settings, URLs, WSGI)
-├── static/              # CSS stylesheets, JavaScript & SVG logos
-├── build.sh             # Production build script
-├── manage.py            # Django CLI utility
-├── Procfile             # Render process declaration
-├── render.yaml          # Infrastructure as Code specification
-├── requirements.txt     # Python production dependencies
-└── runtime.txt          # Python runtime specification
+├── core/                           # Primary Django domain application
+│   ├── api/                        # RESTful API routing and views (/api/v1/)
+│   ├── migrations/                 # Committed database migrations
+│   ├── services/                   # Business logic layer
+│   │   ├── analytics_service.py    # Topic performance & recommendations
+│   │   ├── document_service.py     # Document validation & text extraction
+│   │   ├── flashcard_service.py    # AI synthesis & heuristic flashcards
+│   │   ├── quiz_service.py         # Gemini AI MCQ synthesis & cloze fallback
+│   │   └── streak_service.py       # Active day streak tracking
+│   ├── templates/                  # Django templates
+│   │   ├── components/             # Reusable UI partials (navbar, footer, alerts)
+│   │   └── ...                     # Portal pages (dashboards, quizzes, notes)
+│   ├── forms.py                    # Server-side validation forms (NotesForm)
+│   ├── models.py                   # Relational ORM models (Student, Quiz, Question, Notes)
+│   ├── storage.py                  # Lenient WhiteNoise storage handler
+│   ├── tests.py                    # Automated test suites (36 unit/integration tests)
+│   └── views/                      # Modular HTTP views (auth, notes, quiz, flashcards)
+├── smartstudy/                     # Project configuration
+│   ├── settings.py                 # Hardened environment settings
+│   ├── urls.py                     # Root URL routing
+│   └── wsgi.py                     # WSGI application entrypoint
+├── static/                         # CSS stylesheets, JavaScript & SVG assets
+├── staticfiles/                    # Compiled assets for WhiteNoise
+├── build.sh                        # Production build script for Render
+├── render.yaml                     # Infrastructure as Code specification
+├── requirements.txt                # Pinned production dependencies
+└── runtime.txt                     # Target Python runtime (python-3.13.7)
 ```
 
 ---
 
-## 🔐 Security & Reliability
+## 🛡️ Security & Document Validation Pipeline
 
-- **CSRF & Session Security**: Robust cross-site request forgery and cookie protections.
-- **Protected Routing**: Granular access control for student and parent namespaces with automatic redirect preservation.
-- **REST Error Standards**: Authenticated JSON responses returning standard `401 Unauthorized` and `403 Forbidden` statuses.
-- **Secret Isolation**: Configuration loaded strictly via environment variables with `python-decouple`.
+1. **Production Safety Defaults**:
+   - `DEBUG` defaults strictly to `False`.
+   - `SECRET_KEY` requires an explicitly configured, strong key (50+ characters) in production and fails fast if missing.
+   - Production requires PostgreSQL (`DATABASE_URL`) and refuses to silently use ephemeral SQLite.
+
+2. **Uploaded Document Security**:
+   - **Supported Formats**: Only PDF (`.pdf`), Word (`.docx`), Plain Text (`.txt`), and Markdown (`.md`) are accepted.
+   - **File Signature Inspection**: Magic bytes are verified (`%PDF-` for PDFs, `PK` for DOCX).
+   - **Password-Protected Documents**: Encrypted PDFs are detected and rejected with a student-friendly explanation.
+   - **Scanned PDF Handling**: Detects documents containing no extractable text and informs students that OCR is required.
+   - **Path Traversal Protection**: Uploaded files are stored with random UUID filenames (`notes/<uuid>.<ext>`), preventing path traversal and file collisions.
+   - **Per-User Storage Quota**: Uploads are restricted to 10 MB per document and 50 MB total per student account.
+   - **Automatic Cleanup**: Deleting a note automatically removes its physical file from storage via a Django `post_delete` signal.
+
+3. **Authorization & IDOR Protection**:
+   - Object-level ownership is verified on the server for all note viewing, quiz taking, submission, flashcard studying, and deletion.
+   - Parents can only access records belonging to their explicitly linked child.
+   - Anonymous requests to protected portals are safely redirected to the login page.
+
+4. **AI Reliability & Prompt Delimiting**:
+   - Student notes are bounded within `<STUDY_NOTES>` tags with explicit prompt boundaries to mitigate prompt injection.
+   - Generated questions are strictly validated for required fields, exactly 4 unique choices, answer correspondence, explanations, and difficulty ratings.
+   - Malformed or incomplete questions are quarantined and topped up via intelligent cloze-deletion NLP fallback.
+   - Students can report ambiguous or incorrect questions directly from the results view.
+
+---
+
+## ☁️ Production File Storage
+
+### Ephemeral Filesystem vs. Object Storage
+On cloud platforms like Render's free tier, the local filesystem is **ephemeral**: files stored on disk are wiped whenever the application redeploys or restarts.
+- **Database Persistence**: PostgreSQL safely persists student profiles, quiz records, flashcards, and note metadata across deployments.
+- **Document File Persistence**:
+  - For local development, files are stored in `media/` via `FileSystemStorage`.
+  - For production, StudyGrade supports private S3-compatible **Cloud Object Storage** (AWS S3, Cloudflare R2, Supabase Storage, or MinIO).
+
+To enable cloud object storage in production, set these environment variables:
+```env
+USE_S3_STORAGE=True
+AWS_STORAGE_BUCKET_NAME=your-bucket-name
+AWS_ACCESS_KEY_ID=your-access-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-access-key
+AWS_S3_REGION_NAME=us-east-1
+# For Cloudflare R2 or MinIO:
+# AWS_S3_ENDPOINT_URL=https://<account_id>.r2.cloudflarestorage.com
+```
+
+---
+
+## 🚀 Render Production Deployment
+
+### 1. Automatic Deployment via Blueprint (`render.yaml`)
+1. Fork or push the repository to GitHub.
+2. In the [Render Dashboard](https://dashboard.render.com/), click **New** > **Blueprint**.
+3. Connect your GitHub repository. Render will automatically parse `render.yaml`, provision a managed PostgreSQL database, and build the web service using `build.sh`.
+
+### 2. Required Production Environment Variables
+Set these variables in your Render service dashboard under **Environment**:
+
+| Variable | Recommended Production Value | Description |
+|---|---|---|
+| `DEBUG` | `False` | Disables debug mode in production |
+| `SECRET_KEY` | *(Generate via Render or python secrets)* | 50+ character random secret key |
+| `ALLOWED_HOSTS` | `studygrade.onrender.com,.onrender.com` | Allowed incoming HTTP hostnames |
+| `CSRF_TRUSTED_ORIGINS` | `https://studygrade.onrender.com,https://*.onrender.com` | Trusted HTTPS origins for POST requests |
+| `DATABASE_URL` | *(Automatically linked from PostgreSQL service)* | Managed PostgreSQL connection string |
+| `GEMINI_API_KEY` | *(Your Google AI Studio API key)* | Enables AI quiz and flashcard synthesis |
+| `USE_S3_STORAGE` | `True` *(when object storage bucket is configured)* | Enables cloud object storage persistence |
+| `AWS_STORAGE_BUCKET_NAME` | *(Your S3 or R2 bucket name)* | Object storage bucket name |
+| `AWS_ACCESS_KEY_ID` | *(Your storage access key)* | Object storage access credentials |
+| `AWS_SECRET_ACCESS_KEY` | *(Your storage secret key)* | Object storage secret credentials |
+
+---
+
+## ⚠️ Known Limitations & Manual Setup Actions
+
+1. **Scanned PDF OCR**:
+   - The application extracts selectable text from PDF, DOCX, TXT, and Markdown files.
+   - Image-only scanned PDFs require optical character recognition (OCR). The system detects scanned documents and prompts the student to upload notes containing selectable text.
+2. **Gemini API Key**:
+   - You must obtain an API key from [Google AI Studio](https://aistudio.google.com/) and configure `GEMINI_API_KEY` in the Render dashboard. If absent, the built-in cloze NLP extractor continues to generate quizzes without interruption.
+3. **External Object Storage**:
+   - If persistent storage for original uploaded PDF files across Render container restarts is needed, configure an S3-compatible bucket (e.g. Cloudflare R2 provides a free 10GB tier) and provide the credentials listed above.
+4. **Secret Key Rotation**:
+   - Never commit `.env` or production credentials to Git history. If any key is ever compromised, rotate it immediately in the external provider dashboard.
 
 ---
 
